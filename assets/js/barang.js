@@ -449,7 +449,6 @@ function ModalSatuan(id) {
         function (response) {
             try {
                 const json = JSON.parse(response); // pastikan response valid JSON
-                console.log(json);
                 $('#nama_satuan').val('');
 
                 $('#nama_satuan').val(json.nama_satuan);
@@ -606,7 +605,7 @@ function loadDaftarBarangDashboard() {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 product-grid" id="daftar-barang">
+                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -664,7 +663,7 @@ function daftarBarangDashboardKategori(id) {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 product-grid" id="daftar-barang">
+                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -722,7 +721,7 @@ function loadDaftarBarang() {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 product-grid" id="daftar-barang">
+                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -785,7 +784,7 @@ function daftarBarangKategori(id) {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 product-grid" id="daftar-barang">
+                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -829,13 +828,12 @@ function loadNotifKeranjang() {
             if (!json.data_keranjang || json.data_keranjang.length === 0) {
                 // Kalau kosong
                 $('#keranjang-ikon').html(`
-                    <p>Keranjang Kosong</p>
+                    <p class="text-center p-4">Keranjang Kosong</p>
                 `);
                 return;
             }
 
             $('#countKeranjang').append('<span class="alert-count">' + json.data_keranjang.length + '</span>');
-            console.log(json.data_keranjang);
 
             let data = ``;
 
@@ -891,7 +889,7 @@ function loadDaftarKeranjang() {
                 return;
             }
 
-            // Kalau ada data, buat tabelnya
+            // Kalau ada data, buat daftarnya
             let data = `
                 <div class="table-responsive">
                 <table id="daftarKeranjangData" class="table">
@@ -902,34 +900,35 @@ function loadDaftarKeranjang() {
                 // Tombol aksi
                 let tombolAksi = `
                     <button type="button" class="btn btn-danger" title="Hapus Data"
-                            onclick="hapusRapat('${row.id}')">
+                            onclick="hapusKeranjang('${row.id_jumlah}')">
                             <i class="bx bxs-trash"></i>
                     </button>
                 `;
 
                 let tombolJumlah = `
-                    <button class="btn btn-light" type="button" onclick="kurangJumlah('${row.id}')"> - </button>
-					<input type="text" class="form-control" id="input${row.id_jumlah}" value="${row.jumlah}">
-					<button class="btn btn-light" type="button" onclick="tambahJumlah('${row.id}')"> + </button>
+                    <button class="btn btn-light" type="button" onclick="kurangJumlah('${row.id_jumlah}')"> - </button>
+					<input type="text" class="form-control" name="jumlah" id="input${row.id_jumlah}" value="${row.jumlah}">
+					<button class="btn btn-light" type="button" onclick="tambahJumlah('${row.id_jumlah}')"> + </button>
                 `;
 
                 // Baris tabel
                 data += `
                     <tr>
-                        <td><img src="${row.foto}" class="p-1 border" width="90" height="90" alt="${row.nama_barang}"></td>
+                        <td class="text-center g-0"><img src="${row.foto}" class="p-1 border" width="90" height="90" alt="${row.nama_barang}"></td>
                         <td>
                             <div class="flex-grow-1 ms-3">
 								<h5 class="mt-0">${row.nama_barang}</h5>
 								<div class="col">
 								    <label class="form-label">Jumlah</label>
+                                    <input type="hidden" id="stok${row.id_jumlah}" value="${row.stok}">
 								    <div class="input-group input-spinner">
 									    ${tombolJumlah}
 								    </div>
-                                    <div class="text-danger" id="stok_notif${row.id_jumlah}">
+                                    <div class="text-danger mt-1" id="stok_notif${row.id_jumlah}">
 							    </div>
 							</div>
                         </td>
-                        <td>${tombolAksi}</td>
+                        <td class="text-center p-4">${tombolAksi}</td>
                     </tr>
                 `;
             });
@@ -977,5 +976,308 @@ function orderBarang(id) {
 }
 
 function kurangJumlah(id) {
+    let input = document.getElementById('input' + id);
+    let notif = $('#stok_notif' + id);
 
+    notif.html(''); // kosongkan notif
+
+    let jml = parseInt(input.value) || 1;
+    jml -= 1;
+
+    if (jml < 1) {
+        hapusKeranjang(id);
+        input.value = 1;
+    } else {
+        input.value = jml;
+        $.post('update_jumlah_barang_keranjang', {
+            id: id, jumlah: jml
+        });
+    }
+}
+
+function tambahJumlah(id) {
+    let inputEl = document.getElementById('input' + id);
+    let notif = $('#stok_notif' + id);
+    let stok = parseInt(document.getElementById('stok' + id).value);
+
+    notif.html('');
+
+    let jml = parseInt(inputEl.value) || 1;
+    jml += 1;
+
+    if (jml > stok) {
+        notif.html('<span class="badge rounded-pill bg-danger">Tidak boleh melebihi stok</span>');
+        inputEl.value = stok;
+    } else {
+        inputEl.value = jml;
+        $.post('update_jumlah_barang_keranjang', {
+            id: id, jumlah: jml
+        });
+    }
+}
+
+function hapusKeranjang(id) {
+    Swal.fire({
+        title: "<h5>HAPUS BARANG DI KERANJANG</h5>",
+        html: "<h5>Apa Anda Yakin Akan Menghapus Barang di Keranjang?</h5>",
+        icon: "warning",
+        background: '#1e1e1e',
+        showCancelButton: true,
+        confirmButtonColor: "#DD2A2A",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Ya, Hapus !",
+        cancelButtonText: "Tidak !"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('hapus_keranjang', { id: id }, function (response) {
+                var json = jQuery.parseJSON(response);
+                if (json.st == 1) {
+                    Swal.fire({
+                        title: "Berhasil !",
+                        text: "Anda Sudah Menghapus Barang",
+                        icon: "success",
+                        confirmButtonColor: "#8EC165",
+                        confirmButtonText: "Oke"
+                    }).then(() => {
+                        loadNotifKeranjang();
+                        loadDaftarKeranjang();
+                    });
+                } else {
+                    Swal.fire("Gagal", "Anda Gagal Menghapus Barang, Silakan Ulangi Lagi", "error");
+                }
+            });
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            Swal.fire("Batal", "Anda Batal Menghapus Barang", "info");
+        }
+    });
+}
+
+function checkout() {
+    let keranjang = [];
+
+    document.querySelectorAll("input[name='jumlah']").forEach(input => {
+        let id_jumlah = input.id.replace("input", "");
+        let jumlah = input.value;
+
+        keranjang.push({
+            id: id_jumlah,
+            jumlah: jumlah
+        });
+    });
+
+    if (keranjang.length === 0) {
+        info("Keranjang kosong!");
+        return;
+    }
+
+    Swal.fire({
+        title: "<h5>KIRIM PERMOHONAN BARANG</h5>",
+        html: "<h5>Anda Yakin Akan Mengirimkan Permohonan ?</h5>",
+        icon: "question",
+        background: '#1e1e1e',
+        showCancelButton: true,
+        confirmButtonColor: "#3396D3",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Ya, Kirim",
+        cancelButtonText: "Tidak"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "checkout", // controller CI3
+                type: "POST",
+                data: { keranjang: keranjang },
+                success: function (response) {
+                    try {
+                        let json = JSON.parse(response);
+                        if (json.success == "1") {
+                            notifikasi("Checkout berhasil! Permohonan Berhasil Kirim", 1);
+                            loadNotifKeranjang();
+                            loadDaftarKeranjang();
+                        } else {
+                            notifikasi("Checkout gagal: " + json.message, 3);
+                        }
+                    } catch (e) {
+                        notifikasi("Response tidak valid", 4);
+                    }
+                }
+            });
+        }
+    });
+}
+
+function loadNotifValidasi() {
+    $.post('show_tabel_validasi', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+            $('#countValidasi').html('');
+            $('#keranjang-ikon').html(''); // kosongkan wrapper
+
+            if (!json.data_validasi || json.data_validasi.length === 0) {
+                $('#countValidasi').html('');
+            } else {
+                $('#countValidasi').append('<span class="alert-count">' + json.data_validasi.length + '</span>');
+            }
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+        }
+    });
+}
+
+function loadTabelValidasi() {
+    $.post('show_tabel_validasi', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelValidasi').html(''); // kosongkan wrapper
+
+            if (!json.data_validasi || json.data_validasi.length === 0) {
+                // Kalau kosong
+                $('#tabelValidasi').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Pemohonan Izin Yang Dibuat. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            // Kalau ada data, buat tabelnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelValidasiData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_validasi.forEach((row, index) => {
+
+                // Tombol aksi
+                tombolAksi = `
+                        <button type="button" class="btn btn-warning" data-bs-target="#validasi-modal"
+                            onclick="BukaValidasiPermohonan('${row.id}')" data-bs-toggle="modal" title="Validasi">
+                            <i class="bx bxs-pencil"></i>
+                        </button>
+                    `;
+
+                // Baris tabel
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            ${row.nama_pegawai}
+                        </td>
+                        <td>${tombolAksi}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelValidasi').append(data);
+
+            // Aktifkan DataTables
+            $("#tabelValidasiData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelValidasi').html('<div class="alert alert-danger">Gagal memuat data validasi.</div>');
+        }
+    });
+}
+
+function BukaValidasiPermohonan(id) {
+    $.post('show_detail_permohonan', { id: id }, function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelDetailPermohonan').html(''); // kosongkan wrapper
+
+            // Kalau ada data, buat daftarnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelDetailPermohonanData" class="table">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH DIMINTA</th>
+                            <th>JUMLAH DIBERIKAN</th>
+                            <th>STATUS</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_keranjang.forEach((row, index) => {
+                // Tombol aksi
+                let tombolAksi = `
+                    <button type="button" class="btn btn-danger" title="Hapus Data"
+                            onclick="hapusKeranjang('${row.id_jumlah}')">
+                            <i class="bx bxs-trash"></i>
+                    </button>
+                `;
+
+                let tombolJumlah = `
+                    <button class="btn btn-light" type="button" onclick="kurangJumlah('${row.id_jumlah}')"> - </button>
+					<input type="text" class="form-control" name="jumlah" id="input${row.id_jumlah}" value="${row.jumlah}">
+					<button class="btn btn-light" type="button" onclick="tambahJumlah('${row.id_jumlah}')"> + </button>
+                `;
+
+                // Baris tabel
+                data += `
+                    <tr>
+                        <td class="text-center g-0"><img src="${row.foto}" class="p-1 border" width="90" height="90" alt="${row.nama_barang}"></td>
+                        <td>
+                            <div class="flex-grow-1 ms-3">
+								<h5 class="mt-0">${row.nama_barang}</h5>
+								<div class="col">
+								    <label class="form-label">Jumlah</label>
+                                    <input type="hidden" id="stok${row.id_jumlah}" value="${row.stok}">
+								    <div class="input-group input-spinner">
+									    ${tombolJumlah}
+								    </div>
+                                    <div class="text-danger mt-1" id="stok_notif${row.id_jumlah}">
+							    </div>
+							</div>
+                        </td>
+                        <td class="text-center p-4">${tombolAksi}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                </table>
+                </div>
+            `;
+
+            $('#daftarKeranjang').append(data);
+
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#daftarKeranjang').html('<div class="alert alert-danger">Gagal memuat data keranjang.</div>');
+        }
+    });
 }
