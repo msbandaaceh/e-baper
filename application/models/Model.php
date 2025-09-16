@@ -111,6 +111,20 @@ class Model extends CI_Model
         }
     }
 
+    public function simpan_permohonan($tabel, $data)
+    {
+        try {
+            $this->db->insert($tabel, $data);
+            $insert_id = $this->db->insert_id();
+            $title = "Simpan Data <br />Update tabel <b>" . $tabel . "</b>[]";
+            $descrip = null;
+            $this->add_audittrail("INSERT", $title, $tabel, $descrip);
+            return $insert_id;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
     public function pembaharuan_data($tabel, $data, $kolom_seleksi, $seleksi)
     {
         try {
@@ -143,11 +157,6 @@ class Model extends CI_Model
 
             $queryRapat = $this->simpan_data('register_barang', $dataRapat);
         } else {
-            if ($data['foto']) {
-                $dataRapat = array(
-                    "foto" => $data['foto'],
-                );
-            }
             $dataRapat = array(
                 "kode_barang" => $data['kode'],
                 "nama_barang" => $data['nama'],
@@ -158,6 +167,10 @@ class Model extends CI_Model
                 "modified_on" => date('Y-m-d H:i:s'),
                 "modified_by" => $this->session->userdata("fullname")
             );
+
+            if ($data['foto']) {
+                $dataRapat['foto'] = $data['foto'];
+            }
 
             $queryRapat = $this->pembaharuan_data('register_barang', $dataRapat, 'id', $data['id']);
         }
@@ -185,7 +198,7 @@ class Model extends CI_Model
             $stok = $cek_stok->row()->stok;
 
             if ($jumlah > $stok) {
-                return ['status' => false, 'message' => 'Gagal Tambah Ke Keranjang, Anda sudah menambah sejumlah '.$jumlah_keranjang.' di keranjang. Tidak boleh melebihi Stok Barang'];
+                return ['status' => false, 'message' => 'Gagal Tambah Ke Keranjang, Anda sudah menambah sejumlah ' . $jumlah_keranjang . ' di keranjang. Tidak boleh melebihi Stok Barang'];
             } else {
                 $id = $cek_keranjang->row()->id;
                 $query = $this->pembaharuan_data('keranjang', $data, 'id', $id);
@@ -207,6 +220,92 @@ class Model extends CI_Model
             return ['status' => true, 'message' => 'Berhasil Tambah ke Keranjang'];
         } else {
             return ['status' => false, 'message' => 'Gagal Tambah Ke Keranjang, ' . $query];
+        }
+    }
+
+    public function proses_checkout_barang($keranjang)
+    {
+        $this->db->trans_start();
+
+        # 1. Simpan ke tabel register_permohonan
+        $data_permohonan = [
+            'pegawai_id' => $this->session->userdata('pegawai_id'),
+            'status' => 0,
+            'hapus' => 0,
+            'created_on' => date('Y-m-d H:i:s'),
+            'created_by' => $this->session->userdata('fullname')
+        ];
+
+        # Ambil id auto increment terakhir
+        $permohonan_id = $this->simpan_permohonan('register_permohonan', $data_permohonan);
+
+        # 2. Simpan ke tabel register_detail_permohonan
+        foreach ($keranjang as $item) {
+            $barang_id = $this->get_seleksi_array('keranjang', ['id' => $item['id']])->row()->barang_id;
+            $detail = [
+                'permohonan_id' => $permohonan_id,
+                'barang_id' => $barang_id,
+                'jumlah' => $item['jumlah'],
+                'status' => 0,
+                'hapus' => 0
+            ];
+
+            $this->simpan_data('register_detail_permohonan', $detail);
+
+            # Set Stok Reserved di tabel register_barang
+            $this->db->set('stok_reserved', 'stok_reserved + ' . (int) $item['jumlah'], FALSE)
+                ->where('id', $barang_id)
+                ->update('register_barang');
+
+            # Opsional: hapus dari keranjang
+            $this->db->set('status', '1')
+                ->where('barang_id', $barang_id)
+                ->where('status', '0')
+                ->where('pegawai_id', $this->session->userdata('pegawai_id'))
+                ->update('keranjang');
+        }
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() == FALSE) {
+            return ['status' => false, 'message' => 'Gagal Checkout'];
+        } else {
+            $params = [
+                'kolom_seleksi' => 'jab_id',
+                'seleksi' => '10'
+            ];
+
+            $result = $this->apihelper->get('apiclient/get_data_pegawai_aktif', $params);
+            if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                $tujuan = $result['response']['data']['id'];
+            } else {
+                $params = [
+                    'kolom_seleksi' => 'plh_id_jabatan',
+                    'seleksi' => '10'
+                ];
+
+                $result = $this->apihelper->get('apiclient/get_data_plh', $params);
+                if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                    $tujuan = $result['response']['data']['pegawai_id'];
+                }
+            }
+
+            $pesanWA = "Assalamualaikum Wr. Wb., Yth.\n";
+            $pesanWA .= "Ada permohonan barang persediaan baru. Silakan lakukan validasi melalui E-BAPER.\n";
+            $pesanWA .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
+
+            $dataNotif = array(
+                'jenis_pesan' => 'barang',
+                'id_pemohon' => $this->session->userdata('pegawai_id'),
+                'pesan' => $pesanWA,
+                'id_tujuan' => $tujuan,
+                'created_by' => $this->session->userdata('fullname'),
+                'created_on' => date('Y-m-d H:i:s')
+            );
+
+            $this->kirim_notif($dataNotif);
+
+            return ['status' => true, 'message' => 'Berhasil Checkout'];
         }
     }
 }

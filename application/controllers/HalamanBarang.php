@@ -30,14 +30,14 @@ class HalamanBarang extends MY_Controller
             $kategori = form_dropdown('kategori', $daftar_kategori, '', 'class = "form-control select" id="kategori"');
             $satuan = form_dropdown('satuan', $daftar_satuan, '', 'class = "form-control select" id="satuan"');
         } else {
-            $get_barang = $this->model->get_seleksi_array('V_register_barang', ['id' => $id]);
+            $get_barang = $this->model->get_seleksi_array('v_register_barang', ['id' => $id]);
             if ($get_barang->num_rows() > 0) {
                 $kategori_barang = $get_barang->row()->kategori_id;
                 $satuan_barang = $get_barang->row()->satuan_id;
                 $nama = $get_barang->row()->nama_barang;
                 $kode = $get_barang->row()->kode_barang;
                 $deskripsi = $get_barang->row()->deskripsi;
-                $stok = $get_barang->row()->stok;
+                $stok = $get_barang->row()->stok - $get_barang->row()->stok_reserved;
                 $foto = $get_barang->row()->foto;
                 $nama_satuan = $get_barang->row()->nama_satuan;
             }
@@ -73,7 +73,7 @@ class HalamanBarang extends MY_Controller
                 'nama_barang' => $row->nama_barang,
                 'foto' => 'assets/images/barang/' . $row->foto,
                 'nama_satuan' => $row->nama_satuan,
-                'stok' => $row->stok,
+                'stok' => $row->stok - $row->stok_reserved,
             ];
         }
 
@@ -91,7 +91,7 @@ class HalamanBarang extends MY_Controller
                 'id' => base64_encode($this->encryption->encrypt($row->id)),
                 'nama_barang' => $row->nama_barang,
                 'foto' => 'assets/images/barang/' . $row->foto,
-                'stok' => $row->stok,
+                'stok' => $row->stok - $row->stok_reserved,
             ];
         }
 
@@ -109,6 +109,7 @@ class HalamanBarang extends MY_Controller
                 'id_jumlah' => $row->id,
                 'nama_barang' => $row->nama_barang,
                 'foto' => 'assets/images/barang/' . $row->foto,
+                'stok' => $row->stok,
                 'jumlah' => $row->jumlah,
             ];
         }
@@ -186,6 +187,11 @@ class HalamanBarang extends MY_Controller
                 }
 
                 $this->load->library('upload', $config);
+
+                if (!$this->upload->do_upload('gambar')) {
+                    echo json_encode(['success' => false, 'message' => $this->upload->display_errors()]);
+                    return;
+                }
 
                 $upload_data = $this->upload->data();
                 $file_path = $upload_data['full_path'];
@@ -407,6 +413,58 @@ class HalamanBarang extends MY_Controller
             echo json_encode(['success' => 1, 'message' => $query['message']]);
         } else {
             echo json_encode(['success' => 3, 'message' => $query['message']]);
+        }
+    }
+
+    public function update_jumlah_barang_keranjang()
+    {
+        $id = $this->input->post('id');
+        $jumlah = $this->input->post('jumlah');
+
+        $this->model->pembaharuan_data('keranjang', ['jumlah' => $jumlah], 'id', $id);
+    }
+
+    public function hapus_keranjang()
+    {
+        $id = $this->input->post('id');
+        $hapus = $this->model->pembaharuan_data('keranjang', ['hapus' => '1'], 'id', $id);
+
+        if ($hapus == 1) {
+            echo json_encode(
+                array(
+                    'st' => 1
+                )
+            );
+        } else {
+            echo json_encode(
+                array(
+                    'st' => 0
+                )
+            );
+        }
+
+        return;
+    }
+
+    public function checkout()
+    {
+        $keranjang = $this->input->post('keranjang');
+
+        if (!$keranjang) {
+            echo json_encode(['success' => '2', 'message' => 'Keranjang kosong']);
+            return;
+        }
+
+        $cek_permohonan = $this->model->get_seleksi_array('register_permohonan', ['pegawai_id' => $this->session->userdata('pegawai_id'), 'status' => '0']);
+        if ($cek_permohonan->num_rows() > 0) {
+            echo json_encode(['success' => 3, 'message' => 'Tidak bisa Checkout, Ada Permohonan Anda Yang Belum Selesai']);
+        } else {
+            $result = $this->model->proses_checkout_barang($keranjang);
+            if ($result['status']) {
+                echo json_encode(['success' => 1, 'message' => $result['message']]);
+            } else {
+                echo json_encode(['success' => 3, 'message' => $result['message']]);
+            }
         }
     }
 }
