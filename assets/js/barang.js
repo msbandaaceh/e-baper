@@ -605,7 +605,7 @@ function loadDaftarBarangDashboard() {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
+                <div class="row row-cols-2 row-cols-sm-4 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -617,7 +617,7 @@ function loadDaftarBarangDashboard() {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
+                                <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p>
                                 </div>
                             </div>
                         </div>
@@ -675,7 +675,7 @@ function daftarBarangDashboardKategori(id) {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
+                                <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p>
                                 </div>
                             </div>
                         </div>
@@ -721,7 +721,7 @@ function loadDaftarBarang() {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -734,11 +734,14 @@ function loadDaftarBarang() {
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
                                 <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
+                                <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p>
                                 </div>
                             </div>
                             <div class="card-footer">
                                 <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#tambah-barang" onclick="dataBarang('${row.id}')">Edit</button>
+                                <button type="button" class="btn btn-success" onclick="updateBarang('${row.id}') data-bs-toggle="modal"
+                                    data-bs-target="#update-stok">Update Stok</button>
                                 <button type="button" class="btn btn-danger" onclick="hapusBarang('${row.id}')">Hapus</button>
                             </div>
                         </div>
@@ -784,7 +787,7 @@ function daftarBarangKategori(id) {
 
             // Kalau ada data, buat tabelnya
             let data = `
-                <div class="row row-cols-2 row-cols-sm-6 row-cols-lg-6 row-cols-xl-8 row-cols-xxl-8 product-grid" id="daftar-barang">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4 product-grid" id="daftar-barang">
             `;
 
             json.data_barang.forEach((row, index) => {
@@ -797,6 +800,7 @@ function daftarBarangKategori(id) {
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
                                 <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
+                                <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p>
                                 </div>
                             </div>
                             <div class="card-footer">
@@ -1110,7 +1114,6 @@ function loadNotifValidasi() {
         try {
             const json = JSON.parse(response); // Pastikan server kirim JSON valid
             $('#countValidasi').html('');
-            $('#keranjang-ikon').html(''); // kosongkan wrapper
 
             if (!json.data_validasi || json.data_validasi.length === 0) {
                 $('#countValidasi').html('');
@@ -1212,19 +1215,23 @@ function BukaValidasiPermohonan(id) {
             const json = JSON.parse(response); // Pastikan server kirim JSON valid
 
             $('#tabelDetailPermohonan').html(''); // kosongkan wrapper
+            $('#judul').html('');
+            $('#judul').html(json.judul);
 
             // Kalau ada data, buat daftarnya
             let data = `
                 <div class="table-responsive">
-                <table id="tabelDetailPermohonanData" class="table">
+                <input type="hidden" class="form-control" id="permohonan_id" value="${json.permohonan_id}">
+                <table id="tabelDetailPermohonanData" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
                             <th>NO</th>
                             <th>NAMA BARANG</th>
                             <th>JUMLAH DIMINTA</th>
+                            <th>STOK BARANG</th>
                             <th>JUMLAH DIBERIKAN</th>
-                            <th>STATUS</th>
                             <th>AKSI</th>
+                            <th>KETERANGAN</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1233,36 +1240,31 @@ function BukaValidasiPermohonan(id) {
             json.data_keranjang.forEach((row, index) => {
                 // Tombol aksi
                 let tombolAksi = `
-                    <button type="button" class="btn btn-danger" title="Hapus Data"
-                            onclick="hapusKeranjang('${row.id_jumlah}')">
-                            <i class="bx bxs-trash"></i>
-                    </button>
+                    <select class="form-control" id="status${row.detail_id}" name="status">
+                        <option value="1">Setuju</option>
+                        <option value="2">Tidak Setuju</option>
+                    </select>
                 `;
 
                 let tombolJumlah = `
-                    <button class="btn btn-light" type="button" onclick="kurangJumlah('${row.id_jumlah}')"> - </button>
-					<input type="text" class="form-control" name="jumlah" id="input${row.id_jumlah}" value="${row.jumlah}">
-					<button class="btn btn-light" type="button" onclick="tambahJumlah('${row.id_jumlah}')"> + </button>
+					<input type="text" class="form-control" autocomplete="off" name="jumlah" id="input${row.detail_id}">
                 `;
 
-                // Baris tabel
                 data += `
                     <tr>
-                        <td class="text-center g-0"><img src="${row.foto}" class="p-1 border" width="90" height="90" alt="${row.nama_barang}"></td>
-                        <td>
-                            <div class="flex-grow-1 ms-3">
-								<h5 class="mt-0">${row.nama_barang}</h5>
-								<div class="col">
-								    <label class="form-label">Jumlah</label>
-                                    <input type="hidden" id="stok${row.id_jumlah}" value="${row.stok}">
-								    <div class="input-group input-spinner">
-									    ${tombolJumlah}
-								    </div>
-                                    <div class="text-danger mt-1" id="stok_notif${row.id_jumlah}">
-							    </div>
-							</div>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_barang}</a></td>
+                        <td>${row.jumlah}
+                            <input type="hidden" value="${row.jumlah}" class="form-control" autocomplete="off" name="jumlah_minta" id="input${row.detail_id}">
                         </td>
-                        <td class="text-center p-4">${tombolAksi}</td>
+                        <td>${row.stok}</td>
+                        <td>
+                            ${tombolJumlah}
+                        </td>
+                        <td>
+                            ${tombolAksi}
+                        </td>
+                        <td><input type="text" class="form-control" autocomplete="off" name="ket" id="ket${row.detail_id}"></td>
                     </tr>
                 `;
             });
@@ -1273,11 +1275,289 @@ function BukaValidasiPermohonan(id) {
                 </div>
             `;
 
-            $('#daftarKeranjang').append(data);
+            $('#tabelDetailPermohonan').append(data);
+
+            $("#tabelDetailPermohonanData").DataTable();
 
         } catch (e) {
             console.error("Gagal parsing JSON:", e);
-            $('#daftarKeranjang').html('<div class="alert alert-danger">Gagal memuat data keranjang.</div>');
+            $('#tabelDetailPermohonan').html('<div class="alert alert-danger">Gagal memuat data detail permohonan.</div>');
         }
     });
+}
+
+function simpanValidasi() {
+    let permohonan_id = document.getElementById('permohonan_id').value;
+
+    let detail = [];
+
+    document.querySelectorAll("#tabelDetailPermohonanData tbody tr").forEach(tr => {
+        let inputMinta = tr.querySelector("input[name='jumlah_minta']");
+        let inputJumlah = tr.querySelector("input[name='jumlah']");
+        let selectStatus = tr.querySelector("select[name='status']");
+        let inputKet = tr.querySelector("input[name='ket']");
+
+        if (!inputJumlah || !selectStatus || !inputKet) return;
+
+        let id = inputJumlah.id.replace("input", "");
+        let jum_minta = inputMinta.value;
+        let jumlah = inputJumlah.value;
+        let status = selectStatus.value;
+        let ket = inputKet.value;
+
+        detail.push({
+            detail_id: id,
+            jum_minta: jum_minta,
+            jumlah_diberikan: jumlah,
+            status: status,
+            keterangan: ket
+        });
+    });
+
+    Swal.fire({
+        title: "<h5>VALIDASI PERMOHONAN</h5>",
+        html: "<h5>Apakah Anda yakin akan menyimpan hasil validasi ini?</h5>",
+        icon: "question",
+        background: '#1e1e1e',
+        showCancelButton: true,
+        confirmButtonColor: "#3396D3",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Ya, Simpan",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "simpan_validasi", // Controller CI3
+                type: "POST",
+                data: { permohonan_id: permohonan_id, detail: detail },
+                success: function (response) {
+                    try {
+                        let json = JSON.parse(response);
+                        if (json.success == "1") {
+                            notifikasi("Validasi berhasil disimpan!", 1);
+                            $('#validasi-modal').modal('hide');
+                            // misalnya redirect ke daftar permohonan
+                            loadTabelValidasi();
+                            loadNotifValidasi();
+                        } else {
+                            notifikasi("Validasi gagal: " + json.message, 3);
+                        }
+                    } catch (e) {
+                        notifikasi("Response tidak valid", 4);
+                    }
+                }
+            });
+        }
+    });
+
+}
+
+function loadNotifValid() {
+    $.post('show_permohonan_valid', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+            $('#countValid').html('');
+
+            if (!json.data_validasi || json.data_validasi.length === 0) {
+                $('#countValid').html('');
+            } else {
+                $('#countValid').append('<span class="alert-count">' + json.data_validasi.length + '</span>');
+            }
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+        }
+    });
+}
+
+function loadTabelValid() {
+    $.post('show_tabel_validasi', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelValid').html(''); // kosongkan wrapper
+
+            if (!json.data_validasi || json.data_validasi.length === 0) {
+                // Kalau kosong
+                $('#tabelValid').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Pemohonan Izin Yang Dibuat. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            // Kalau ada data, buat tabelnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelValidData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_validasi.forEach((row, index) => {
+
+                // Tombol aksi
+                tombolAksi = `
+                        <button type="button" class="btn btn-warning" data-bs-target="#valid-modal"
+                            onclick="BukaValidPermohonan('${row.id}')" data-bs-toggle="modal" title="Validasi">
+                            <i class="bx bxs-pencil"></i>
+                        </button>
+                    `;
+
+                // Baris tabel
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            ${row.nama_pegawai}
+                        </td>
+                        <td>${tombolAksi}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelValid').append(data);
+
+            // Aktifkan DataTables
+            $("#tabelValidData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelValidasi').html('<div class="alert alert-danger">Gagal memuat data validasi.</div>');
+        }
+    });
+}
+
+function BukaValidPermohonan(id) {
+    $.post('show_detail_permohonan_valid', { id: id }, function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelDetailPermohonanValid').html(''); // kosongkan wrapper
+            $('#judul').html('');
+            $('#judul').html(json.judul);
+
+            // Kalau ada data, buat daftarnya
+            let data = `
+                <div class="table-responsive">
+                <input type="hidden" class="form-control" id="permohonan_id" value="${json.permohonan_id}">
+                <table id="tabelDetailPermohonanValidData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH DIMINTA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_valid.forEach((row, index) => {
+                // Tombol aksi
+
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_barang}</a></td>
+                        <td>${row.jumlah}
+                            <input type="hidden" value="${row.jumlah}" class="form-control" autocomplete="off" name="jumlah_minta" id="input${row.detail_id}">
+                        </td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                </table>
+                </div>
+            `;
+
+            $('#tabelDetailPermohonanValid').append(data);
+
+            $("#tabelDetailPermohonanValidData").DataTable();
+
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelDetailPermohonanValid').html('<div class="alert alert-danger">Gagal memuat data detail permohonan.</div>');
+        }
+    });
+}
+
+function simpanValid() {
+    let permohonan_id = document.getElementById('permohonan_id').value;
+
+    let detail = [];
+
+    document.querySelectorAll("#tabelDetailPermohonanValidData tbody tr").forEach(tr => {
+        let inputMinta = tr.querySelector("input[name='jumlah_minta']");
+
+        let id = inputMinta.id.replace("input", "");
+        let jum_minta = inputMinta.value;
+
+        detail.push({
+            detail_id: id,
+            jum_minta: jum_minta,
+        });
+    });
+
+    Swal.fire({
+        title: "<h5>KONFIRMASI PENYERAHAN BARANG</h5>",
+        html: "<h5>Apakah Anda Yakin Sudah Mengantarkan Barang?</h5>",
+        icon: "question",
+        background: '#1e1e1e',
+        showCancelButton: true,
+        confirmButtonColor: "#3396D3",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Ya, Sudah",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "simpan_konfirmasi", // Controller CI3
+                type: "POST",
+                data: { permohonan_id: permohonan_id, detail: detail },
+                success: function (response) {
+                    try {
+                        let json = JSON.parse(response);
+                        if (json.success == "1") {
+                            notifikasi("Konfirmasi Berhasil! Barang sudah diantar ke Pemohon", 1);
+                            $('#valid-modal').modal('hide');
+                            // misalnya redirect ke daftar permohonan
+                            loadTabelValid();
+                            loadNotifValid();
+                        } else {
+                            notifikasi("Konfirmasi gagal: " + json.message, 3);
+                        }
+                    } catch (e) {
+                        notifikasi("Response tidak valid", 4);
+                    }
+                }
+            });
+        }
+    });
+
 }

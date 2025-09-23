@@ -17,7 +17,10 @@ class HalamanUtama extends MY_Controller
         $allowed = [
             'dashboard',
             'data_barang',
-            'keranjang'
+            'keranjang',
+            'validasi',
+            'riwayat_permintaan',
+            'permohonan_valid'
         ];
 
         if (in_array($halaman, $allowed)) {
@@ -39,7 +42,7 @@ class HalamanUtama extends MY_Controller
     public function cek_token_sso()
     {
         $token = $this->input->cookie('sso_token');
-        $cookie_domain = $this->session->userdata('sso_server');
+        $cookie_domain = $this->config->item('sso_server');
         $sso_api = $cookie_domain . "api/cek_token?sso_token={$token}";
         $response = file_get_contents($sso_api);
         $data = json_decode($response, true);
@@ -53,7 +56,7 @@ class HalamanUtama extends MY_Controller
 
     public function keluar()
     {
-        $sso_server = $this->session->userdata('sso_server');
+        $sso_server = $this->config->item('sso_server');
         $this->session->sess_destroy();
         redirect($sso_server . '/keluar');
     }

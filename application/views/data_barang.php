@@ -13,6 +13,9 @@
             </div>
         </div>
 
+        <h6 class="mb-0 text-uppercase">DAFTAR BARANG PERSEDIAAN</h6>
+        <hr />
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -54,12 +57,6 @@
                                                     </ul>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="col-12">
-                                            <button class="btn btn-light mb-3 mb-lg-0" data-bs-toggle="modal"
-                                                data-bs-target="#update-barang"
-                                                onclick="updateBarang('<?= base64_encode($this->encryption->encrypt(-1)); ?>')"><i
-                                                    class="bx bxs-shopping-bag"></i>Update Stok</button>
                                         </div>
                                     </div>
                                 </form>
@@ -142,13 +139,63 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-warning" id="btn-edit" style="display: none">Edit</button>
                 <button type="submit" class="btn btn-light" id="btn-simpan">Simpan</button>
             </div>
         </form>
         <!-- /.modal-content -->
     </div>
     <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="update-stok" data-bs-backdrop="static">
+    <div class="modal-dialog modal-vertical-centered">
+        <form method="POST" id="formUpdateStokBarang" class="modal-content bg-success">
+            <div class="modal-header">
+                <div>
+                    <i class="bx bxs-user me-1 font-22"></i>
+                </div>
+                <h5 class="mb-0">UPDATE STOK BARANG</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <input type="hidden" class="form-control" id="id_barang" name="id">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="v_kode" class="form-label">Kode Barang</label>
+                        <input type="text" class="form-control" id="v_kode" disabled>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="v_nama" class="form-label">Nama Barang</label>
+                        <input type="text" class="form-control" id="v_nama">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="update_stok" class="form-label">Stok Barang <code>*</code></label>
+                        <input type="text" class="form-control" id="update_stok" name="stok" autocomplete="off"
+                            placeholder="1">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="form-label text-danger">* Wajib Diisi</div>
+                </div>
+            </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button type="submit" class="btn btn-light" id="btn-simpan">Simpan</button>
+    </div>
+    </form>
+    <!-- /.modal-content -->
+</div>
+<!-- /.modal-dialog -->
 </div>
 
 <script>

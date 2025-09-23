@@ -308,4 +308,239 @@ class Model extends CI_Model
             return ['status' => true, 'message' => 'Berhasil Checkout'];
         }
     }
+
+    public function proses_validasi_barang($data)
+    {
+        # die(var_dump($data));
+        $this->db->trans_start();
+
+        # Ambil id permohonan
+        $permohonan_id = $data['permohonan_id'];
+
+        # Pembaharuan Data pada tabel register_detail_permohonan
+        foreach ($data['data_barang'] as $item) {
+
+            if ($item['status'] == '1' && (!$item['jumlah_diberikan'] || $item['jumlah_diberikan'] == NULL)) {
+                return ['status' => false, 'message' => 'Peringatan, Isian Jumlah Diberikan harus diisi'];
+            }
+
+            $id_detail = $item['detail_id'];
+            $minta = $item['jum_minta'];
+            $jumlah = $item['jumlah_diberikan'];
+            $status = $item['status'];
+            $keterangan = $item['keterangan'];
+
+            $barang_id = $this->get_seleksi_array('register_detail_permohonan', ['id' => $id_detail])->row()->barang_id;
+
+            if ($item['status'] == '1' && ($jumlah > $minta)) {
+                return ['status' => false, 'message' => 'Peringatan, Jumlah diberikan tidak boleh lebih dari jumlah yang diminta'];
+            }
+
+            if ($status == '1') {
+                $detail = [
+                    'jumlah' => $jumlah,
+                    'keterangan' => $keterangan,
+                ];
+
+                if ($this->session->userdata('jab_id') == '5')
+                    $detail['status'] = '1';
+
+                $jum_reserved = $minta - $jumlah;
+                # Set Stok Reserved di tabel register_barang
+                $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $jum_reserved, FALSE)
+                    ->where('id', $barang_id)
+                    ->update('register_barang');
+            } else {
+                $detail = [
+                    'status' => $status,
+                    'keterangan' => $keterangan,
+                ];
+
+                # Set Stok Reserved di tabel register_barang
+                $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
+                    ->where('id', $barang_id)
+                    ->update('register_barang');
+            }
+
+            if ($status == '2' && (!$keterangan || $keterangan == NULL)) {
+                return ['status' => false, 'message' => 'Peringatan, Jika Status Ditolak, berikan keterangan'];
+            }
+
+            $this->pembaharuan_data('register_detail_permohonan', $detail, 'id', $id_detail);
+        }
+
+        # Update Data Permohonan
+        $pejabat = $this->session->userdata('jab_id');
+        if ($pejabat == '10') {
+            $status = '1';
+            $level = 'Kasub';
+        } else {
+            $status = '2';
+            $level = 'Sekretaris';
+        }
+
+        $data_validasi = [
+            'status' => $status,
+            'modified_by' => $this->session->userdata('fullname'),
+            'modified_on' => date('Y-m-d H:i:s')
+        ];
+
+        $this->pembaharuan_data('register_permohonan', $data_validasi, 'id', $permohonan_id);
+
+        $data_approval = [
+            'permohonan_id' => $permohonan_id,
+            'approver_id' => $this->session->userdata('userid'),
+            'level' => $level,
+            'created_on' => date('Y-m-d H:i:s'),
+            'created_by' => $this->session->userdata('fullname')
+        ];
+
+        $this->simpan_data('register_approval', $data_approval);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() == FALSE) {
+            return ['status' => false, 'message' => 'Validasi gagal, periksa kembali isian anda atau hubungi Bagian IT'];
+        } else {
+            if ($pejabat == '10') {
+                # Validasi Kasub Umum
+                $params = [
+                    'kolom_seleksi' => 'jab_id',
+                    'seleksi' => '5'
+                ];
+
+                $result = $this->apihelper->get('apiclient/get_data_pegawai_aktif', $params);
+                if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                    $tujuan = $result['response']['data']['id'];
+                } else {
+                    $params = [
+                        'kolom_seleksi' => 'plh_id_jabatan',
+                        'seleksi' => '5'
+                    ];
+
+                    $result = $this->apihelper->get('apiclient/get_data_plh', $params);
+                    if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                        $tujuan = $result['response']['data']['pegawai_id'];
+                    }
+                }
+
+                $pesanWA = "Assalamualaikum Wr. Wb., Yth.\n";
+                $pesanWA .= "Ada permohonan barang persediaan baru yang sudah divalidasi Bagian Umum Keuangan. Silakan lakukan validasi melalui ANANDA.\n";
+                $pesanWA .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
+
+                $dataNotif = array(
+                    'jenis_pesan' => 'barang',
+                    'id_pemohon' => $this->session->userdata('pegawai_id'),
+                    'pesan' => $pesanWA,
+                    'id_tujuan' => $tujuan,
+                    'created_by' => $this->session->userdata('fullname'),
+                    'created_on' => date('Y-m-d H:i:s')
+                );
+
+                $this->kirim_notif($dataNotif);
+            } else {
+                # Validasi Sekretaris
+                $operator = $this->get_seleksi_array('peran', ['role' => 'operator'])->result_array();
+
+                $pesanWA = "Assalamualaikum Wr. Wb., Yth.\n";
+                $pesanWA .= "Ada permohonan barang persediaan baru yang sudah divalidasi. Silakan antarkan barang sesuai permohonan Pegawai yang sudah tervalidasi.\n";
+                $pesanWA .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
+
+                foreach ($operator as $petugas) {
+                    $dataNotif = array(
+                        'jenis_pesan' => 'barang',
+                        'id_pemohon' => $this->session->userdata('pegawai_id'),
+                        'pesan' => $pesanWA,
+                        'id_tujuan' => $petugas['pegawai_id'],
+                        'created_by' => $this->session->userdata('fullname'),
+                        'created_on' => date('Y-m-d H:i:s')
+                    );
+
+                    $this->kirim_notif($dataNotif);
+                }
+
+                $tujuan = $this->get_seleksi_array('register_permhonan', ['id' => $permohonan_id])->row()->pegawai_id;
+
+                $pesan = "Assalamualaikum Wr. Wb., Yth.\n";
+                $pesan .= "Permohonan sudah divalidasi. Silakan tunggu barang diantar oleh Petugas Barang Persediaan.\n";
+                $pesan .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
+
+                $dataNotifPemohon = array(
+                    'jenis_pesan' => 'barang',
+                    'id_pemohon' => $this->session->userdata('pegawai_id'),
+                    'pesan' => $pesan,
+                    'id_tujuan' => $tujuan,
+                    'created_by' => $this->session->userdata('fullname'),
+                    'created_on' => date('Y-m-d H:i:s')
+                );
+
+                $this->kirim_notif($dataNotifPemohon);
+            }
+
+            return ['status' => true, 'message' => 'Validasi Berhasil'];
+        }
+
+    }
+
+    public function proses_konfirmasi_permohonan($data)
+    {
+        # die(var_dump($data));
+        $this->db->trans_start();
+
+        # Ambil id permohonan
+        $permohonan_id = $data['permohonan_id'];
+
+        # Pembaharuan Data pada tabel register_detail_permohonan
+        foreach ($data['data_barang'] as $item) {
+
+            $id_detail = $item['detail_id'];
+            $minta = $item['jum_minta'];
+
+            $barang_id = $this->get_seleksi_array('register_detail_permohonan', ['id' => $id_detail])->row()->barang_id;
+
+            # Set Stok Reserved di tabel register_barang
+            $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
+                ->where('id', $barang_id)
+                ->update('register_barang');
+
+            # Set Stok di tabel register_barang
+            $this->db->set('stok', 'stok - ' . (int) $minta, FALSE)
+                ->where('id', $barang_id)
+                ->update('register_barang');
+
+            $data_riwayat_stok = [
+                'barang_id' => $barang_id,
+                'tipe' => 'keluar',
+                'jumlah' => $minta,
+                'keterangan' => 'Permohonan Barang Persediaan oleh Pegawai',
+                'created_by' => $this->session->userdata('fullname'),
+                'created_on' => date('Y-m-d H:i:s')
+            ];
+
+            $this->simpan_data('riwayat_stok', $data_riwayat_stok);
+        }
+
+        # Set Status Permohonan di tabel register_permohonan
+        $this->db->set('status', '3')
+            ->where('id', $permohonan_id)
+            ->update('register_permohonan');
+
+        $data_approval = [
+            'permohonan_id' => $permohonan_id,
+            'approver_id' => $this->session->userdata('userid'),
+            'level' => $this->session->userdata('peran'),
+            'created_on' => date('Y-m-d H:i:s'),
+            'created_by' => $this->session->userdata('fullname')
+        ];
+
+        $this->simpan_data('register_approval', $data_approval);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() == FALSE) {
+            return ['status' => false, 'message' => 'Konfirmasi gagal, periksa kembali data anda atau hubungi Bagian IT'];
+        } else {
+            return ['status' => true, 'message' => 'Konfirmasi Penyerahan Barang Berhasil'];
+        }
+    }
 }

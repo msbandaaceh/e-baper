@@ -14,6 +14,9 @@
             </div>
         </div>
 
+        <h6 class="mb-0 text-uppercase">KERANJANG</h6>
+        <hr />
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -21,6 +24,12 @@
 
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 text-end">
+                <button type="button" class="btn btn-light" onclick="checkout()">Kirim Permohonan</button>
             </div>
         </div>
     </div>

@@ -73,7 +73,9 @@ class HalamanBarang extends MY_Controller
                 'nama_barang' => $row->nama_barang,
                 'foto' => 'assets/images/barang/' . $row->foto,
                 'nama_satuan' => $row->nama_satuan,
-                'stok' => $row->stok - $row->stok_reserved,
+                'stok' => $row->stok,
+                'stok_reserved' => $row->stok_reserved,
+                'stok_dashboard' => $row->stok - $row->stok_reserved
             ];
         }
 
@@ -91,7 +93,9 @@ class HalamanBarang extends MY_Controller
                 'id' => base64_encode($this->encryption->encrypt($row->id)),
                 'nama_barang' => $row->nama_barang,
                 'foto' => 'assets/images/barang/' . $row->foto,
-                'stok' => $row->stok - $row->stok_reserved,
+                'stok_dashboard' => $row->stok - $row->stok_reserved,
+                'stok' => $row->stok,
+                'stok_reserved' => $row->stok_reserved,
             ];
         }
 

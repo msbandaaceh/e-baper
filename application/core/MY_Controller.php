@@ -66,7 +66,7 @@ class MY_Controller extends CI_Controller
         }
 
         #Cek peran pegawai
-        if (in_array($this->session->userdata('role'), ['super', 'validator_kepeg_satker', 'admin_satker'])) {
+        if (in_array($this->session->userdata('role'), ['super', 'validator_uk_satker', 'admin_satker'])) {
             $this->session->set_userdata('peran', 'admin');
         } else {
             $query = $this->model->get_seleksi_array('peran', ['pegawai_id' => $this->session->userdata('pegawai_id')]);
@@ -84,7 +84,7 @@ class MY_Controller extends CI_Controller
 
     protected function cek_token($token)
     {
-        $cookie_domain = $this->session->userdata('sso_server');
+        $cookie_domain = $this->config->item('sso_server');
         $sso_api = $cookie_domain . "api/cek_token?sso_token={$token}";
         $response = file_get_contents($sso_api);
         $data = json_decode($response, true);

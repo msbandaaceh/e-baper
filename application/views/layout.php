@@ -47,7 +47,7 @@
                             <img src="assets/images/e-baper.webp" class="logo-icon" alt="logo icon">
                         </div>
                         <div class="">
-                            <h4 class="logo-text">E-BAPER</h4>
+                            <h4 class="logo-text">ANANDA</h4>
                         </div>
                     </div>
                     <div class="mobile-toggle-menu"><i class='bx bx-menu'></i></div>
@@ -98,6 +98,12 @@
                                             </div>
                                             <div class="app-title">Lemari Persediaan</div>
                                         </div>
+                                        <div class="col text-center">
+                                            <div class="app-box mx-auto bg-gradient-cosmic text-white"><i
+                                                    class='bx bx-history' data-page="riwayat_permintaan"></i>
+                                            </div>
+                                            <div class="app-title">Riwayat Permintaan</div>
+                                        </div>
                                     </div>
                                 </div>
                             </li>
@@ -122,6 +128,30 @@
                                     </a>
                                 </div>
                             </li>
+
+                            <?php
+                            if (in_array($peran, ['admin'])) {
+                                ?>
+                                <li class="nav-item dropdown dropdown-large">
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
+                                        data-page="validasi" role="button">
+                                        <div id="countValidasi"></div>
+                                        <i class='bx bx-task'></i>
+                                    </a>
+                                </li>
+                            <?php } ?>
+
+                            <?php
+                            if (in_array($peran, ['operator'])) {
+                                ?>
+                                <li class="nav-item dropdown dropdown-large">
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
+                                        data-page="permohonan_valid" role="button">
+                                        <div id="countValid"></div>
+                                        <i class='bx bx-task'></i>
+                                    </a>
+                                </li>
+                            <?php } ?>
                         </ul>
                     </div>
                     <div class="user-box dropdown">
@@ -177,9 +207,6 @@
         <!--Start Back To Top Button--> <a href="javaScript:;" class="back-to-top"><i
                 class='bx bxs-up-arrow-alt'></i></a>
         <!--End Back To Top Button-->
-        <footer class="page-footer">
-            <p class="mb-0">Copyright © 2025. All right reserved.</p>
-        </footer>
     </div>
 
     <div class="modal fade" id="role-pegawai" data-bs-backdrop="static">
@@ -332,10 +359,16 @@
                 e.preventDefault();
                 let page = $(this).data('page');
                 loadPage(page);
+                //load ikon keranjang
+                loadNotifKeranjang();
+                loadNotifValidasi();
+                loadNotifValid();
             });
 
             //load ikon keranjang
             loadNotifKeranjang();
+            loadNotifValidasi();
+            loadNotifValid();
         });
     </script>
 

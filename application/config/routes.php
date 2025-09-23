@@ -15,12 +15,23 @@ $route['hapus_barang'] = 'HalamanBarang/hapus_barang';
 
 $route['show_daftar_keranjang'] = 'HalamanBarang/show_daftar_keranjang';
 $route['tambah_keranjang'] = 'HalamanBarang/tambah_keranjang';
+$route['update_jumlah_barang_keranjang'] = 'HalamanBarang/update_jumlah_barang_keranjang';
+$route['hapus_keranjang'] = 'HalamanBarang/hapus_keranjang';
+$route['checkout'] = 'HalamanBarang/checkout';
 
 $route['show_kategori'] = 'HalamanBarang/show_kategori';
 $route['simpan_kategori'] = 'HalamanBarang/simpan_kategori';
 
 $route['show_satuan'] = 'HalamanBarang/show_satuan';
 $route['simpan_satuan'] = 'HalamanBarang/simpan_satuan';
+
+$route['show_tabel_validasi'] = 'HalamanValidasi/show_tabel_validasi';
+$route['show_detail_permohonan'] = 'HalamanValidasi/show_detail_permohonan';
+$route['simpan_validasi'] = 'HalamanValidasi/simpan_validasi';
+
+$route['show_permohonan_valid'] = 'HalamanValidasi/show_tabel_validasi';
+$route['show_detail_permohonan_valid'] = 'HalamanValidasi/show_detail_permohonan_valid';
+$route['simpan_konfirmasi'] = 'HalamanValidasi/simpan_konfirmasi';
 
 # ROUTE PROSES PERAN
 $route['show_role'] = 'HalamanUtama/show_role';
