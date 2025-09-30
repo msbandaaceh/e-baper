@@ -27,6 +27,31 @@ $(function () {
         });
     });
 
+    $(document).off('submit', '#formAmbilBarang').on('submit', '#formAmbilBarang', function (e) {
+        e.preventDefault();
+        let form = this;
+        let formData = new FormData(form);
+
+        $.ajax({
+            url: 'simpan_ambil_barang',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (res) {
+                notifikasi(res.message, res.success);
+                if (res.success == '1') {
+                    $('#ambil-barang').modal('hide');
+                    loadTabelAmbilBarang();
+                }
+            },
+            error: function () {
+                notifikasi('Terjadi kesalahan saat menyimpan data.', 4);
+            }
+        });
+    });
+
     $(document).off('submit', '#formTambahKeranjang').on('submit', '#formTambahKeranjang', function (e) {
         e.preventDefault();
         let form = this;
@@ -44,6 +69,31 @@ $(function () {
                 if (res.success == '1') {
                     $('#tambah-keranjang').modal('hide');
                     loadNotifKeranjang();
+                }
+            },
+            error: function () {
+                notifikasi('Terjadi kesalahan saat menyimpan data.', 4);
+            }
+        });
+    });
+
+    $(document).off('submit', '#formUpdateStokBarang').on('submit', '#formUpdateStokBarang', function (e) {
+        e.preventDefault();
+        let form = this;
+        let formData = new FormData(form);
+
+        $.ajax({
+            url: 'simpan_update',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function (res) {
+                notifikasi(res.message, res.success);
+                if (res.success == '1') {
+                    $('#update-stok').modal('hide');
+                    loadDaftarBarang();
                 }
             },
             error: function () {
@@ -617,7 +667,7 @@ function loadDaftarBarangDashboard() {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p>
+                                <!-- <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p> -->
                                 </div>
                             </div>
                         </div>
@@ -675,7 +725,7 @@ function daftarBarangDashboardKategori(id) {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p>
+                                <!-- <p class="mb-0 float-start">Stok : <strong>${row.stok_dashboard} ${row.nama_satuan}</strong></p> -->
                                 </div>
                             </div>
                         </div>
@@ -733,14 +783,14 @@ function loadDaftarBarang() {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
-                                <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p>
+                                    <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
                                 </div>
+                                <!-- <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p> -->
                             </div>
                             <div class="card-footer">
                                 <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#tambah-barang" onclick="dataBarang('${row.id}')">Edit</button>
-                                <button type="button" class="btn btn-success" onclick="updateBarang('${row.id}') data-bs-toggle="modal"
+                                <button type="button" class="btn btn-success" onclick="updateBarang('${row.id}')" data-bs-toggle="modal"
                                     data-bs-target="#update-stok">Update Stok</button>
                                 <button type="button" class="btn btn-danger" onclick="hapusBarang('${row.id}')">Hapus</button>
                             </div>
@@ -799,13 +849,15 @@ function daftarBarangKategori(id) {
                             <div class="card-body">
                                 <h6 class="card-title cursor-pointer">${row.nama_barang}</h6>
                                 <div class="clearfix">
-                                <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
-                                <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p>
+                                    <p class="mb-0 float-start">Stok : <strong>${row.stok} ${row.nama_satuan}</strong></p>
                                 </div>
+                                <!-- <p class="mb-0 float-start">Dipesan : <strong>${row.stok_reserved} ${row.nama_satuan}</strong></p> -->
                             </div>
                             <div class="card-footer">
                                 <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#tambah-barang" onclick="dataBarang('${row.id}')">Edit</button>
+                                <button type="button" class="btn btn-success" onclick="updateBarang('${row.id}')" data-bs-toggle="modal"
+                                    data-bs-target="#update-stok">Update Stok</button>
                                 <button type="button" class="btn btn-danger" onclick="hapusBarang('${row.id}')">Hapus</button>
                             </div>
                         </div>
@@ -1009,6 +1061,11 @@ function tambahJumlah(id) {
     let jml = parseInt(inputEl.value) || 1;
     jml += 1;
 
+    inputEl.value = jml;
+    $.post('update_jumlah_barang_keranjang', {
+        id: id, jumlah: jml
+    });
+    /*
     if (jml > stok) {
         notif.html('<span class="badge rounded-pill bg-danger">Tidak boleh melebihi stok</span>');
         inputEl.value = stok;
@@ -1018,6 +1075,7 @@ function tambahJumlah(id) {
             id: id, jumlah: jml
         });
     }
+    */
 }
 
 function hapusKeranjang(id) {
@@ -1560,4 +1618,277 @@ function simpanValid() {
         }
     });
 
+}
+
+function updateBarang(id) {
+    $.post('show_barang', {
+        id: id
+    }, function (response) {
+        var json = jQuery.parseJSON(response);
+        if (json.st == 1) {
+            $('#id_barang').val('');
+            $('#v_nama').val('');
+            $('#v_kode').val('');
+
+            $('#id_barang').val(json.id);
+            $('#v_nama').val(json.nama);
+            $('#v_kode').val(json.kode);
+
+        }
+    });
+}
+
+function loadTabelRiwayatPermohonan() {
+    $.post('show_tabel_riwayat_permohonan', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelRiwayatPermohonan').html(''); // kosongkan wrapper
+
+            if (!json.data_riwayat || json.data_riwayat.length === 0) {
+                // Kalau kosong
+                $('#tabelRiwayatPermohonan').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Permohonan Barang Persediaan Yang Dibuat. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            // Kalau ada data, buat tabelnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelRiwayatPermohonanData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>TANGGAL</th>
+                            <th class="text-center">STATUS PERMOHONAN</th>
+                            <th class="text-center">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_riwayat.forEach((row, index) => {
+                // Tombol aksi
+                let tombolAksi = `
+                        <button type="button" class="btn btn-info" title="Lihat Detail Permohonan"
+                            data-bs-target="#detail-riwayat"
+                            onclick="detailRiwayatPermohonan('${row.id}')"
+                            data-bs-toggle="modal"><i class="bx bxs-show"></i>
+                        </button>
+                `;
+
+                let statusBadge = '';
+                if (row.status == '0') {
+                    statusBadge = '<span class="btn btn-primary radius-30">Menunggu Diproses</span>';
+                } else if (row.status == '1') {
+                    statusBadge = '<span class="btn btn-warning radius-30">Sudah Validasi tk Kasub</span>';
+                } else if (row.status == '2') {
+                    statusBadge = '<span class="btn btn-warning radius-30">Sudah Validasi tk Sekretaris</span>';
+                } else if (row.status == '3') {
+                    statusBadge = '<span class="btn btn-success radius-30">Selesai</span>';
+                }
+
+                // Baris tabel
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.tgl}</td>
+                        <td class="text-center">${statusBadge}</td>
+                        <td class="text-center">${tombolAksi}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>TANGGAL</th>
+                            <th class="text-center">STATUS PERMOHONAN</th>
+                            <th class="text-center">AKSI</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelRiwayatPermohonan').append(data);
+
+            // Aktifkan DataTables
+            $("#tabelRiwayatPermohonanData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelRiwayatPermohonan').html('<div class="alert alert-danger">Gagal memuat data riwayat.</div>');
+        }
+    });
+}
+
+function detailRiwayatPermohonan(id) {
+    $.post('show_detail_riwayat_permohonan', { id: id }, function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelDetailRiwayatBarang').html(''); // kosongkan wrapper
+            $('#riwayatPermohonan').html('');
+
+            let dataRiwayat = `
+                <div class="row g-0">
+					<div class="col-sm py-2">
+						<div class="card border-primary shadow radius-15">
+							<div class="card-body">
+								<div class="float-end text-white small">${json.tanggal_permohonan}</div>
+								<p class="card-text">Tanggal Permohonan Dibuat</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-1 text-center flex-column d-none d-sm-flex">
+						<div class="row h-50">
+							<div class="col border-end">&nbsp;</div>
+							<div class="col">&nbsp;</div>
+						</div>
+						<h5 class="m-2">
+						<span class="badge rounded-pill bg-white">&nbsp;</span>
+					</h5>
+						<div class="row h-50">
+							<div class="col border-end">&nbsp;</div>
+							<div class="col">&nbsp;</div>
+						</div>
+					</div>
+					<div class="col-sm">
+						<!--spacer-->
+					</div>
+				</div>
+            `;
+
+            json.data_riwayat.forEach((row, index) => {
+                let isKiri = row.posisi === 'kiri';
+
+                dataRiwayat += `
+                    <div class="row g-0">
+                        ${isKiri ? `
+                        <div class="col-sm py-2">
+                            <div class="card border-primary shadow radius-15">
+                            <div class="card-body">
+                                <div class="float-end text-white small">${row.tanggal}</div>
+                                <p class="card-text">Diproses oleh ${row.level}</p>
+                            </div>
+                            </div>
+                        </div>
+                        ` : `<div class="col-sm"> <!-- spacer --> </div>`}
+
+                        <div class="col-sm-1 text-center flex-column d-none d-sm-flex">
+                        <div class="row h-50">
+                            <div class="col ${isKiri ? 'border-end' : ''}">&nbsp;</div>
+                            <div class="col">&nbsp;</div>
+                        </div>
+                        <h5 class="m-2">
+                        <span class="badge rounded-pill bg-white">&nbsp;</span>
+                        </h5>
+                        <div class="row h-50">
+                            <div class="col ${isKiri ? 'border-end' : ''}">&nbsp;</div>
+                            <div class="col">&nbsp;</div>
+                        </div>
+                        </div>
+
+                        ${!isKiri ? `
+                        <div class="col-sm py-2">
+                            <div class="card border-primary shadow radius-15">
+                            <div class="card-body">
+                                <div class="float-end text-white small">${row.tanggal}</div>
+                                <p class="card-text">Diproses oleh ${row.level}</p>
+                            </div>
+                            </div>
+                        </div>
+                        ` : `<div class="col-sm"> <!-- spacer --> </div>`}
+                    </div>
+                `;
+            });
+
+            // Kalau ada data, buat daftarnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelDetailRiwayatBarangData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH DIMINTA</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_barang.forEach((row, index) => {
+                // Tombol aksi
+
+                let statusBadge = '';
+                if (row.status == '0') {
+                    statusBadge = '<span class="btn btn-primary radius-30">Menunggu Diproses</span>';
+                } else if (row.status == '1') {
+                    statusBadge = '<span class="btn btn-success radius-30">Setuju</span>';
+                } else if (row.status == '2') {
+                    statusBadge = '<span class="btn btn-danger radius-30">Tidak Setuju</span>';
+                }
+
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_barang}</a></td>
+                        <td>${row.jumlah}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                </table>
+                </div>
+            `;
+
+            $('#riwayatPermohonan').append(dataRiwayat);
+            $('#tabelDetailRiwayatBarang').append(data);
+
+            $("#tabelDetailRiwayatBarangData").DataTable();
+
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelDetailRiwayatBarang').html('<div class="alert alert-danger">Gagal memuat data detail permohonan.</div>');
+        }
+    });
+}
+
+function ambilBarang(id) {
+    $.post('show_barang_lemari', {
+        id: id
+    }, function (response) {
+        var json = jQuery.parseJSON(response);
+        if (json.st == 1) {
+            $('#id').val('');
+            $('#barang_').html('');
+            $('#jumlah').val('');
+
+            $('#id').val(json.id);
+            $('#barang_').append(json.barang);
+            $('#jumlah').val(json.jumlah);
+
+            $('#barang').select2({
+                theme: 'bootstrap4',
+                dropdownParent: $('#ambil-barang .modal-content'),
+                width: '100%',
+                dropdownAutoWidth: true
+            })
+        }
+    });
 }

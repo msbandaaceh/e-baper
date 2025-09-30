@@ -12,7 +12,7 @@
                 </nav>
             </div>
         </div>
-        
+
         <h6 class="mb-0 text-uppercase">VALIDASI PERMOHONAN</h6>
         <hr />
 
@@ -46,7 +46,8 @@
             </div>
             <div class="modal-footer">
                 <div class="row justify-content-end">
-                    <button id="submit" type="submit" class="btn btn-light" onclick="simpanValidasi()">Simpan Validasi</button>
+                    <button id="submit" type="submit" class="btn btn-light" onclick="simpanValidasi()">Simpan
+                        Validasi</button>
                 </div>
             </div>
         </div>
@@ -57,6 +58,8 @@
 
 <script>
     $(document).ready(function () {
-        loadTabelValidasi();
+        var role = '<?= $this->session->userdata('role') ?>';
+        if (role != 'super')
+            loadTabelValidasi();
     });
 </script>

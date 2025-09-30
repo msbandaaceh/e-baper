@@ -83,11 +83,13 @@
                     <div class="col-md-8">
                         <div class="card-body">
                             <h4 class="card-title" id="nama_barang"></h4>
+                            <!--
                             <div class="d-flex gap-3 py-3">
                                 <div class="text-white" id="stok_label"><i class="bx bxs-cart-alt align-middle"></i>
                                 </div>
                                 <input type="hidden" id="stok">
                             </div>
+                            -->
 
                             <div class="mb-3">
                                 <span>Deskripsi</span>
@@ -144,13 +146,15 @@
         $('#stok_notif').html('');
         let jml = parseInt(document.getElementById('jumlah').value);
         jml += 1;
-        let stok = document.getElementById('stok').value;
+        $('#jumlah').val(jml);
+        // let stok = document.getElementById('stok').value;
+        /*
         if (jml > stok) {
             $('#stok_notif').append('Tidak boleh melebihi stok');
             $('#jumlah').val(stok);
         } else {
             $('#jumlah').val(jml);
-        }
+        }*/
     });
 
     document.getElementById('button-minus').addEventListener("click", function () {

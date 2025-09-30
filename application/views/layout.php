@@ -93,8 +93,9 @@
                                             </div>
                                         <?php } ?>
                                         <div class="col text-center">
-                                            <div class="app-box mx-auto bg-gradient-blues text-white"><i
-                                                    class='bx bx-collection'></i>
+                                            <div class="app-box mx-auto bg-gradient-blues text-white"><a
+                                                    href="<?= site_url('ambil_barang') ?>"><i
+                                                        class='bx bx-collection'></i></a>
                                             </div>
                                             <div class="app-title">Lemari Persediaan</div>
                                         </div>
@@ -181,7 +182,7 @@
                     <img src="assets/images/e-baper.webp" class="logo-icon" alt="logo icon">
                 </div>
                 <div>
-                    <h4 class="logo-text">E-BAPER</h4>
+                    <h4 class="logo-text">ANANDA</h4>
                 </div>
                 <div class="toggle-icon ms-auto"><i class='bx bx-arrow-to-left'></i>
                 </div>
@@ -353,6 +354,8 @@
         $(document).ready(function () {
             // Load page
             loadPage('dashboard');
+            var peran = '<?= $this->session->userdata('peran') ?>';
+            var role = '<?= $this->session->userdata('role') ?>';
 
             // Navigasi SPA
             $('[data-page]').on('click', function (e) {
@@ -361,14 +364,18 @@
                 loadPage(page);
                 //load ikon keranjang
                 loadNotifKeranjang();
-                loadNotifValidasi();
-                loadNotifValid();
+                if (peran == 'admin' && role != 'super')
+                    loadNotifValidasi();
+                else if (peran == 'operator')
+                    loadNotifValid();
             });
 
             //load ikon keranjang
             loadNotifKeranjang();
-            loadNotifValidasi();
-            loadNotifValid();
+            if (peran == 'admin' && role != 'super')
+                loadNotifValidasi();
+            else if (peran == 'operator')
+                loadNotifValid();
         });
     </script>
 

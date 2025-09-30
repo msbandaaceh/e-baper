@@ -7,10 +7,15 @@ $route['translate_uri_dashes'] = FALSE;
 
 $route['cek_token'] = 'HalamanUtama/cek_token_sso';
 
+$route['ambil_barang'] = 'HalamanUtama/ambil_barang';
+$route['show_barang_lemari'] = 'HalamanBarang/show_barang_lemari';
+$route['simpan_ambil_barang'] = 'HalamanBarang/simpan_ambil_barang';
+
 $route['show_barang'] = 'HalamanBarang/show_barang';
 $route['show_daftar_barang'] = 'HalamanBarang/show_daftar_barang';
 $route['show_daftar_barang_kategori'] = 'HalamanBarang/show_daftar_barang_kategori';
 $route['simpan_barang'] = 'HalamanBarang/simpan_barang';
+$route['simpan_update'] = 'HalamanBarang/simpan_update';
 $route['hapus_barang'] = 'HalamanBarang/hapus_barang';
 
 $route['show_daftar_keranjang'] = 'HalamanBarang/show_daftar_keranjang';
@@ -32,6 +37,9 @@ $route['simpan_validasi'] = 'HalamanValidasi/simpan_validasi';
 $route['show_permohonan_valid'] = 'HalamanValidasi/show_tabel_validasi';
 $route['show_detail_permohonan_valid'] = 'HalamanValidasi/show_detail_permohonan_valid';
 $route['simpan_konfirmasi'] = 'HalamanValidasi/simpan_konfirmasi';
+
+$route['show_tabel_riwayat_permohonan'] = 'HalamanUtama/show_tabel_riwayat_permohonan';
+$route['show_detail_riwayat_permohonan'] = 'HalamanUtama/show_detail_riwayat_permohonan';
 
 # ROUTE PROSES PERAN
 $route['show_role'] = 'HalamanUtama/show_role';

@@ -62,6 +62,78 @@ class HalamanBarang extends MY_Controller
         return;
     }
 
+    public function show_barang_lemari()
+    {
+        $id = $this->encryption->decrypt(base64_decode($this->input->post('id')));
+
+        $jumlah = '';
+        $data_barang = $this->model->get_seleksi_array('register_barang');
+        if ($data_barang->num_rows() > 0) {
+            $barang = array();
+            foreach ($data_barang->result() as $row) {
+                $stok = $row->stok - $row->stok_reserved;
+                if ($stok > 0) {
+                    $barang[$row->id] = $row->nama_barang;
+                }
+            }
+        }
+
+        if ($id == '-1') {
+            $lis_barang = form_dropdown('barang', $barang, '', 'class = "form-control select2" id="barang"');
+        } else {
+            $data = $this->model->get_seleksi_array('register_ambil_barang', ['id' => $id]);
+            if ($data->num_rows() > 0) {
+                $barang_pilih = $data->row()->barang_id;
+                $jumlah = $data->row()->jumlah;
+
+                $lis_barang = form_dropdown('barang', $barang, $barang_pilih, 'class = "form-control select2" id="barang"');
+            }
+        }
+        echo json_encode(
+            array(
+                'st' => 1,
+                'id' => $id,
+                'barang' => $lis_barang,
+                'jumlah' => $jumlah
+            )
+        );
+        return;
+    }
+
+    public function simpan_ambil_barang()
+    {
+        $this->form_validation->set_rules('barang', 'Barang', 'trim|required');
+        $this->form_validation->set_rules('jumlah', 'Jumlah Barang', 'trim|required');
+
+        $this->form_validation->set_message(['required' => '%s Tidak Boleh Kosong']);
+
+        if ($this->form_validation->run() == FALSE) {
+            echo json_encode(['success' => 2, 'message' => validation_errors()]);
+            return;
+        }
+
+        $data_barang = $this->model->get_seleksi_array('register_barang', ['id' => $this->input->post('barang')]);
+        $stok = $data_barang->row()->stok - $data_barang->row()->stok_reserved;
+        if ($this->input->post('jumlah') > $stok) {
+            echo json_encode(['success' => 2, 'message' => 'Tidak bisa mengambil barang melebihi stok']);
+            return;
+        }
+
+        $data = [
+            'id' => $this->input->post('id'),
+            'barang_id' => $this->input->post('barang'),
+            'jumlah' => $this->input->post('jumlah')
+        ];
+
+        $result = $this->model->proses_simpan_ambil_barang($data);
+
+        if ($result['status']) {
+            echo json_encode(['success' => 1, 'message' => $result['message']]);
+        } else {
+            echo json_encode(['success' => 3, 'message' => $result['message']]);
+        }
+    }
+
     public function show_daftar_barang()
     {
         $query = $this->model->get_seleksi_array('v_register_barang', '', ['nama_barang' => 'ASC', 'stok' => 'DESC'])->result();
@@ -85,13 +157,14 @@ class HalamanBarang extends MY_Controller
     public function show_daftar_barang_kategori()
     {
         $id = $this->input->post('id');
-        $query = $this->model->get_seleksi_array('register_barang', ['kategori_id' => $id], ['nama_barang' => 'ASC', 'stok' => 'DESC'])->result();
+        $query = $this->model->get_seleksi_array('v_register_barang', ['kategori_id' => $id], ['nama_barang' => 'ASC', 'stok' => 'DESC'])->result();
 
         $data = [];
         foreach ($query as $row) {
             $data[] = [
                 'id' => base64_encode($this->encryption->encrypt($row->id)),
                 'nama_barang' => $row->nama_barang,
+                'nama_satuan' => $row->nama_satuan,
                 'foto' => 'assets/images/barang/' . $row->foto,
                 'stok_dashboard' => $row->stok - $row->stok_reserved,
                 'stok' => $row->stok,
@@ -260,6 +333,31 @@ class HalamanBarang extends MY_Controller
 
         imagedestroy($image);
         return true;
+    }
+
+    public function simpan_update()
+    {
+        $this->form_validation->set_rules('stok', 'Update Stok', 'trim|required');
+
+        $this->form_validation->set_message(['required' => '%s Tidak Boleh Kosong']);
+
+        if ($this->form_validation->run() == FALSE) {
+            echo json_encode(['success' => 2, 'message' => validation_errors()]);
+            return;
+        }
+
+        $data = [
+            'id' => $this->input->post('id'),
+            'stok' => $this->input->post('stok')
+        ];
+
+        $result = $this->model->proses_update_stok_barang($data);
+
+        if ($result['status']) {
+            echo json_encode(['success' => 1, 'message' => $result['message']]);
+        } else {
+            echo json_encode(['success' => 3, 'message' => $result['message']]);
+        }
     }
 
     public function show_kategori()
@@ -459,7 +557,8 @@ class HalamanBarang extends MY_Controller
             return;
         }
 
-        $cek_permohonan = $this->model->get_seleksi_array('register_permohonan', ['pegawai_id' => $this->session->userdata('pegawai_id'), 'status' => '0']);
+        #$cek_permohonan = $this->model->get_seleksi_array('register_permohonan', ['pegawai_id' => $this->session->userdata('pegawai_id'), 'status' => '0']);
+        $cek_permohonan = $this->model->cek_status_permohonan();
         if ($cek_permohonan->num_rows() > 0) {
             echo json_encode(['success' => 3, 'message' => 'Tidak bisa Checkout, Ada Permohonan Anda Yang Belum Selesai']);
         } else {

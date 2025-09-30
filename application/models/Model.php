@@ -98,6 +98,17 @@ class Model extends CI_Model
         }
     }
 
+    public function cek_status_permohonan()
+    {
+        try {
+            $this->db->where('status <> 3');
+            $this->db->where('pegawai_id', $this->session->userdata('pegawai_id'));
+            return $this->db->get('register_permohonan');
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
     public function simpan_data($tabel, $data)
     {
         try {
@@ -143,7 +154,7 @@ class Model extends CI_Model
     {
         if ($data['id'] == "-1") {
             //buat data barang baru
-            $dataRapat = array(
+            $dataBarang = array(
                 "kode_barang" => $data['kode'],
                 "nama_barang" => $data['nama'],
                 "satuan_id" => $data['satuan'],
@@ -155,9 +166,9 @@ class Model extends CI_Model
                 "created_by" => $this->session->userdata("fullname")
             );
 
-            $queryRapat = $this->simpan_data('register_barang', $dataRapat);
+            $queryBarang = $this->simpan_data('register_barang', $dataBarang);
         } else {
-            $dataRapat = array(
+            $dataBarang = array(
                 "kode_barang" => $data['kode'],
                 "nama_barang" => $data['nama'],
                 "satuan_id" => $data['satuan'],
@@ -169,20 +180,20 @@ class Model extends CI_Model
             );
 
             if ($data['foto']) {
-                $dataRapat['foto'] = $data['foto'];
+                $dataBarang['foto'] = $data['foto'];
             }
 
-            $queryRapat = $this->pembaharuan_data('register_barang', $dataRapat, 'id', $data['id']);
+            $queryBarang = $this->pembaharuan_data('register_barang', $dataBarang, 'id', $data['id']);
         }
 
-        if ($queryRapat == 1) {
+        if ($queryBarang == 1) {
             if ($data['id'] == '-1') {
                 return ['status' => true, 'message' => 'Barang Berhasil di Tambahkan'];
             } else {
                 return ['status' => true, 'message' => 'Barang Berhasil di Perbarui'];
             }
         } else {
-            return ['status' => false, 'message' => 'Gagal Simpan Barang, ' . $queryRapat];
+            return ['status' => false, 'message' => 'Gagal Simpan Barang, ' . $queryBarang];
         }
     }
 
@@ -542,5 +553,56 @@ class Model extends CI_Model
         } else {
             return ['status' => true, 'message' => 'Konfirmasi Penyerahan Barang Berhasil'];
         }
+    }
+
+    public function proses_update_stok_barang($data)
+    {
+        $this->db->trans_start();
+
+        $barang_id = $data['id'];
+        $stok = $data['stok'];
+        # Set Stok Reserved di tabel register_barang
+        $this->db->set('stok', 'stok + ' . (int) $stok, FALSE)
+            ->where('id', $barang_id)
+            ->update('register_barang');
+
+        $dataBarang = [
+            'barang_id' => $barang_id,
+            'tipe' => 'masuk',
+            'jumlah' => $stok,
+            'keterangan' => 'Update Stok Barang',
+            'created_by' => $this->session->userdata('fullname'),
+            'created_on' => date('Y-m-d H:i:s')
+        ];
+
+        $this->simpan_data('riwayat_stok', $dataBarang);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() == FALSE) {
+            return ['status' => false, 'message' => 'Update stok gagal, periksa kembali isian anda atau hubungi Bagian IT'];
+        } else {
+            return ['status' => true, 'message' => 'Stok Barang Berhasil di Perbarui'];
+        }
+    }
+
+    public function proses_simpan_ambil_barang($data)
+    {
+        $id = $data['id'];
+        $barang_id = $data['barang_id'];
+        $jumlah = $data['jumlah'];
+
+        if ($id == '-1') {
+            $data = [
+                'barang_id' => $barang_id,
+                'jumlah' => $jumlah
+            ];
+
+            $this->simpan_data('register_ambil_barang', $data);
+            $this->db->set('stok', 'stok - ' . (int) $jumlah, FALSE)
+                ->where('id', $barang_id)
+                ->update('register_barang');
+        }
+
     }
 }

@@ -11,6 +11,11 @@ class HalamanUtama extends MY_Controller
         $this->load->view('layout', $data);
     }
 
+    public function ambil_barang() {
+        $data['peran'] = $this->session->userdata('peran');
+        $this->load->view('ambil_barang', $data);
+    }
+
     public function page($halaman)
     {
         // Amanin nama file view agar tidak sembarang file bisa diload
@@ -236,5 +241,66 @@ class HalamanUtama extends MY_Controller
                 )
             );
         }
+    }
+
+    public function show_tabel_riwayat_permohonan()
+    {
+        $query = $this->model->get_seleksi_array('register_permohonan', ['pegawai_id' => $this->session->userdata('pegawai_id')], ['status' => 'ASC', 'created_on' => 'DESC'])->result();
+
+        $data = [];
+        foreach ($query as $row) {
+            $date = new DateTime($row->created_on);
+            $data[] = [
+                'id' => base64_encode($this->encryption->encrypt($row->id)),
+                'tgl' => $this->tanggalhelper->convertDayDate($date->format('Y-m-d')),
+                'status' => $row->status
+            ];
+        }
+
+        echo json_encode(['data_riwayat' => $data]);
+    }
+
+    public function show_detail_riwayat_permohonan()
+    {
+        $permohonan_id = $this->encryption->decrypt(base64_decode($this->input->post('id')));
+
+        # Ambil Data Barang sesuai Permohonan Id
+        $queryBarang = $this->model->get_seleksi_array('v_detail_permohonan', ['permohonan_id' => $permohonan_id])->result();
+        $dataBarang = [];
+        foreach ($queryBarang as $row) {
+            $dataBarang[] = [
+                'nama_barang' => $row->nama_barang,
+                'jumlah' => $row->jumlah_permohonan,
+                'status' => $row->status_permohonan
+            ];
+        }
+
+        $tgl_permohonan = $this->model->get_seleksi_array('register_permohonan', ['id' => $permohonan_id])->row()->created_on;
+        $date = new DateTime($tgl_permohonan);
+        $tgl = $this->tanggalhelper->convertDayDate($date->format('Y-m-d'));
+
+        # Ambil Riwayat Approval sesuai Permohonan Id
+        $queryRiwayat = $this->model->get_seleksi_array('register_approval', ['permohonan_id' => $permohonan_id], ['created_on' => 'ASC'])->result();
+        $dataRiwayat = [];
+        $posisi = 'kanan';
+        foreach ($queryRiwayat as $row) {
+            $date = new DateTime($row->created_on);
+            switch ($row->level) {
+                case 'Kasub' : $level = 'Kepala Sub Umum Keuangan'; break;
+                case 'Sekretaris' : $level = 'Seketaris'; break;
+                case 'operator' : $level = 'Operator Persediaan'; break; 
+            }
+
+            $dataRiwayat[] = [
+                'created_by' => $row->created_by,
+                'tanggal' => $this->tanggalhelper->convertDayDate($date->format('Y-m-d')),
+                'level' => $level,
+                'posisi' => $posisi
+            ];
+
+            $posisi = ($posisi === 'kanan') ? 'kiri' : 'kanan';
+        }
+
+        echo json_encode(['data_barang' => $dataBarang, 'tanggal_permohonan' => $tgl, 'data_riwayat' => $dataRiwayat]);
     }
 }
