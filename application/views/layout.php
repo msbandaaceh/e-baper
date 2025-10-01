@@ -50,6 +50,11 @@
                             <h4 class="logo-text">ANANDA</h4>
                         </div>
                     </div>
+                    <div class="search-bar flex-grow-1">
+						<div class="position-relative search-bar-box">
+							<h3>Aplikasi Permohonan dan Administrasi Barang Persediaan</h3>
+						</div>
+					</div>
                     <div class="mobile-toggle-menu"><i class='bx bx-menu'></i></div>
 
                     <div class="top-menu ms-auto">
