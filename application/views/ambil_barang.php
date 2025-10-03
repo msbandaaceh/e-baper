@@ -209,7 +209,7 @@
 
     <script>
         $(document).ready(function () {
-            //loadTabelAmbilBarang();
+            loadTabelAmbilBarang();
         });
     </script>
 

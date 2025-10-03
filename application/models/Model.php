@@ -202,18 +202,10 @@ class Model extends CI_Model
         $cek_keranjang = $this->get_seleksi_array('keranjang', ['pegawai_id' => $this->session->userdata('pegawai_id'), 'barang_id' => $data['id'], 'status' => '0']);
         if ($cek_keranjang->num_rows() > 0) {
             $jumlah = $cek_keranjang->row()->jumlah;
-            $jumlah_keranjang = $jumlah;
             $jumlah += $data['jumlah'];
 
-            $cek_stok = $this->get_seleksi_array('v_register_barang', ['id' => $data['id']]);
-            $stok = $cek_stok->row()->stok;
-
-            if ($jumlah > $stok) {
-                return ['status' => false, 'message' => 'Gagal Tambah Ke Keranjang, Anda sudah menambah sejumlah ' . $jumlah_keranjang . ' di keranjang. Tidak boleh melebihi Stok Barang'];
-            } else {
-                $id = $cek_keranjang->row()->id;
-                $query = $this->pembaharuan_data('keranjang', $data, 'id', $id);
-            }
+            $id = $cek_keranjang->row()->id;
+            $query = $this->pembaharuan_data('keranjang', $data, 'id', $id);
 
             $data['jumlah'] = $jumlah;
         } else {
@@ -264,9 +256,9 @@ class Model extends CI_Model
             $this->simpan_data('register_detail_permohonan', $detail);
 
             # Set Stok Reserved di tabel register_barang
-            $this->db->set('stok_reserved', 'stok_reserved + ' . (int) $item['jumlah'], FALSE)
-                ->where('id', $barang_id)
-                ->update('register_barang');
+            #$this->db->set('stok_reserved', 'stok_reserved + ' . (int) $item['jumlah'], FALSE)
+            #    ->where('id', $barang_id)
+            #    ->update('register_barang');
 
             # Opsional: hapus dari keranjang
             $this->db->set('status', '1')
@@ -302,7 +294,7 @@ class Model extends CI_Model
             }
 
             $pesanWA = "Assalamualaikum Wr. Wb., Yth.\n";
-            $pesanWA .= "Ada permohonan barang persediaan baru. Silakan lakukan validasi melalui E-BAPER.\n";
+            $pesanWA .= "Ada permohonan barang persediaan baru. Silakan lakukan validasi melalui ANANDA MS Banda Aceh.\n";
             $pesanWA .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
 
             $dataNotif = array(
@@ -348,29 +340,29 @@ class Model extends CI_Model
             }
 
             if ($status == '1') {
-                $detail = [
-                    'jumlah' => $jumlah,
-                    'keterangan' => $keterangan,
-                ];
+                $detail['jumlah'] = $jumlah;
 
                 if ($this->session->userdata('jab_id') == '5')
-                    $detail['status'] = '1';
+                    $detail['status'] = $status;
 
-                $jum_reserved = $minta - $jumlah;
+                if ($keterangan)
+                    $detail['keterangan'] = $keterangan;
+
+                #$jum_reserved = $minta - $jumlah;
                 # Set Stok Reserved di tabel register_barang
-                $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $jum_reserved, FALSE)
-                    ->where('id', $barang_id)
-                    ->update('register_barang');
+                #$this->db->set('stok_reserved', 'stok_reserved - ' . (int) $jum_reserved, FALSE)
+                #    ->where('id', $barang_id)
+                #    ->update('register_barang');
             } else {
-                $detail = [
-                    'status' => $status,
-                    'keterangan' => $keterangan,
-                ];
+                $detail['status'] = $status;
+
+                if ($keterangan)
+                    $detail['keterangan'] = $keterangan;
 
                 # Set Stok Reserved di tabel register_barang
-                $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
-                    ->where('id', $barang_id)
-                    ->update('register_barang');
+                #$this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
+                #    ->where('id', $barang_id)
+                #    ->update('register_barang');
             }
 
             if ($status == '2' && (!$keterangan || $keterangan == NULL)) {
@@ -436,7 +428,7 @@ class Model extends CI_Model
                 }
 
                 $pesanWA = "Assalamualaikum Wr. Wb., Yth.\n";
-                $pesanWA .= "Ada permohonan barang persediaan baru yang sudah divalidasi Bagian Umum Keuangan. Silakan lakukan validasi melalui ANANDA.\n";
+                $pesanWA .= "Ada permohonan barang persediaan baru yang sudah divalidasi Bagian Umum Keuangan. Silakan lakukan validasi melalui ANANDA MS Banda Aceh.\n";
                 $pesanWA .= "Demikian diinformasikan, Terima Kasih atas perhatian.";
 
                 $dataNotif = array(
@@ -470,7 +462,7 @@ class Model extends CI_Model
                     $this->kirim_notif($dataNotif);
                 }
 
-                $tujuan = $this->get_seleksi_array('register_permhonan', ['id' => $permohonan_id])->row()->pegawai_id;
+                $tujuan = $this->get_seleksi_array('register_permohonan', ['id' => $permohonan_id])->row()->pegawai_id;
 
                 $pesan = "Assalamualaikum Wr. Wb., Yth.\n";
                 $pesan .= "Permohonan sudah divalidasi. Silakan tunggu barang diantar oleh Petugas Barang Persediaan.\n";
@@ -490,7 +482,6 @@ class Model extends CI_Model
 
             return ['status' => true, 'message' => 'Validasi Berhasil'];
         }
-
     }
 
     public function proses_konfirmasi_permohonan($data)
@@ -510,9 +501,9 @@ class Model extends CI_Model
             $barang_id = $this->get_seleksi_array('register_detail_permohonan', ['id' => $id_detail])->row()->barang_id;
 
             # Set Stok Reserved di tabel register_barang
-            $this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
-                ->where('id', $barang_id)
-                ->update('register_barang');
+            #$this->db->set('stok_reserved', 'stok_reserved - ' . (int) $minta, FALSE)
+            #    ->where('id', $barang_id)
+            #    ->update('register_barang');
 
             # Set Stok di tabel register_barang
             $this->db->set('stok', 'stok - ' . (int) $minta, FALSE)
@@ -594,14 +585,38 @@ class Model extends CI_Model
 
         if ($id == '-1') {
             $data = [
+                'pegawai_id' => $this->session->userdata('pegawai_id'),
                 'barang_id' => $barang_id,
-                'jumlah' => $jumlah
+                'jumlah' => $jumlah,
+                'created_on' => date('Y-m-d H:i:s'),
+                'created_by' => $this->session->userdata('fullname')
             ];
 
+            $data_transaksi = [
+                'barang_id' => $barang_id,
+                'tipe' => 'keluar',
+                'jumlah' => $jumlah,
+                'keterangan' => 'Pegawai Ambil Barang dari Lemari Persediaan',
+                'created_on' => date('Y-m-d H:i:s'),
+                'created_by' => $this->session->userdata('fullname')
+            ];
+
+            $this->db->trans_start();
+
             $this->simpan_data('register_ambil_barang', $data);
+            $this->simpan_data('riwayat_stok', $data_transaksi);
+
             $this->db->set('stok', 'stok - ' . (int) $jumlah, FALSE)
                 ->where('id', $barang_id)
                 ->update('register_barang');
+
+            $this->db->trans_complete();
+        }
+
+        if ($this->db->trans_status() == FALSE) {
+            return ['status' => false, 'message' => 'Simpan Formulir Ambil Barang, periksa kembali isian anda atau hubungi Bagian IT'];
+        } else {
+            return ['status' => true, 'message' => 'Simpan Formulir Ambil Barang Berhasil, Stok Barang Berhasil di Perbarui'];
         }
 
     }

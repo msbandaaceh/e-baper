@@ -27,10 +27,13 @@
     </title>
     <style>
         /* Hover untuk nav-item dropdown */
-        .nav-item.dropdown:hover>.dropdown-menu {
-            display: block;
-            margin-top: 0;
-            /* biar menempel */
+        @media (min-width: 992px) {
+
+            /* Hover untuk nav-item dropdown di desktop */
+            .nav-item.dropdown:hover>.dropdown-menu {
+                display: block;
+                margin-top: 0;
+            }
         }
     </style>
 </head>
@@ -51,10 +54,10 @@
                         </div>
                     </div>
                     <div class="search-bar flex-grow-1">
-						<div class="position-relative search-bar-box">
-							<h3>Aplikasi Permohonan dan Administrasi Barang Persediaan</h3>
-						</div>
-					</div>
+                        <div class="position-relative search-bar-box">
+                            <h3 class="logo-text">Aplikasi Permohonan dan Administrasi Barang Persediaan</h3>
+                        </div>
+                    </div>
                     <div class="mobile-toggle-menu"><i class='bx bx-menu'></i></div>
 
                     <div class="top-menu ms-auto">
@@ -139,7 +142,7 @@
                             if (in_array($peran, ['admin'])) {
                                 ?>
                                 <li class="nav-item dropdown dropdown-large">
-                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="javascript:;"
                                         data-page="validasi" role="button">
                                         <div id="countValidasi"></div>
                                         <i class='bx bx-task'></i>
@@ -151,7 +154,7 @@
                             if (in_array($peran, ['operator'])) {
                                 ?>
                                 <li class="nav-item dropdown dropdown-large">
-                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="javascript:;"
                                         data-page="permohonan_valid" role="button">
                                         <div id="countValid"></div>
                                         <i class='bx bx-task'></i>
@@ -367,6 +370,15 @@
                 e.preventDefault();
                 let page = $(this).data('page');
                 loadPage(page);
+
+                // tutup dropdown jika mode mobile
+                if (window.innerWidth < 992) {
+                    var dropdownToggle = $(this).closest('.dropdown').find('[data-bs-toggle="dropdown"]');
+                    if (dropdownToggle.length) {
+                        bootstrap.Dropdown.getInstance(dropdownToggle[0]).hide();
+                    }
+                }
+
                 //load ikon keranjang
                 loadNotifKeranjang();
                 if (peran == 'admin' && role != 'super')

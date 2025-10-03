@@ -10,6 +10,7 @@ $route['cek_token'] = 'HalamanUtama/cek_token_sso';
 $route['ambil_barang'] = 'HalamanUtama/ambil_barang';
 $route['show_barang_lemari'] = 'HalamanBarang/show_barang_lemari';
 $route['simpan_ambil_barang'] = 'HalamanBarang/simpan_ambil_barang';
+$route['show_tabel_ambil_barang'] = 'HalamanBarang/show_tabel_ambil_barang';
 
 $route['show_barang'] = 'HalamanBarang/show_barang';
 $route['show_daftar_barang'] = 'HalamanBarang/show_daftar_barang';

@@ -1199,7 +1199,7 @@ function loadTabelValidasi() {
                             <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
                             <div class="ms-3">
                                 <h6 class="mb-0 text-info">Informasi</h6>
-                                <div>Belum Ada Pemohonan Izin Yang Dibuat. Terima kasih.</div>
+                                <div>Belum Ada Pemohonan Barang Yang Dibuat. Terima kasih.</div>
                             </div>
                         </div>
                     </div>
@@ -1442,7 +1442,7 @@ function loadTabelValid() {
                             <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
                             <div class="ms-3">
                                 <h6 class="mb-0 text-info">Informasi</h6>
-                                <div>Belum Ada Pemohonan Izin Yang Dibuat. Terima kasih.</div>
+                                <div>Belum Ada Pemohonan Barang Yang Dibuat. Terima kasih.</div>
                             </div>
                         </div>
                     </div>
@@ -1889,6 +1889,82 @@ function ambilBarang(id) {
                 width: '100%',
                 dropdownAutoWidth: true
             })
+        }
+    });
+}
+
+function loadTabelAmbilBarang() {
+    $.post('show_tabel_ambil_barang', function (response) {
+        try {
+            const json = JSON.parse(response); // Pastikan server kirim JSON valid
+
+            $('#tabelAmbilBarang').html(''); // kosongkan wrapper
+
+            if (!json.data_riwayat || json.data_riwayat.length === 0) {
+                // Kalau kosong
+                $('#tabelAmbilBarang').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Barang Persediaan Yang Diambil Sendiri di Lemari Persediaan. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            // Kalau ada data, buat tabelnya
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelAmbilBarangData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH</th>
+                            <th>TANGGAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_riwayat.forEach((row, index) => {
+
+                // Baris tabel
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_barang}</td>
+                        <td>${row.jumlah}</td>
+                        <td>${row.tgl}</td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH</th>
+                            <th>TANGGAL</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelAmbilBarang').append(data);
+
+            // Aktifkan DataTables
+            $("#tabelAmbilBarangData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelAmbilBarang').html('<div class="alert alert-danger">Gagal memuat data riwayat ambil barang.</div>');
         }
     });
 }

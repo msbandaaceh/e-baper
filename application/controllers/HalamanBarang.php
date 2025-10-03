@@ -100,6 +100,24 @@ class HalamanBarang extends MY_Controller
         return;
     }
 
+    public function show_tabel_ambil_barang()
+    {
+        $query = $this->model->get_seleksi_array('v_ambil_barang', ['pegawai_id' => $this->session->userdata('pegawai_id')], ['created_on' => 'DESC'])->result();
+
+        $data = [];
+        foreach ($query as $row) {
+            $date = new DateTime($row->created_on);
+            $data[] = [
+                'id' => base64_encode($this->encryption->encrypt($row->id)),
+                'tgl' => $this->tanggalhelper->convertDayDate($date->format('Y-m-d')),
+                'nama_barang' => $row->nama_barang,
+                'jumlah' => $row->jumlah
+            ];
+        }
+
+        echo json_encode(['data_riwayat' => $data]);
+    }
+
     public function simpan_ambil_barang()
     {
         $this->form_validation->set_rules('barang', 'Barang', 'trim|required');
