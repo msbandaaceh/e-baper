@@ -113,6 +113,20 @@
                                             </div>
                                             <div class="app-title">Riwayat Permintaan</div>
                                         </div>
+                                        <div class="col text-center">
+                                            <div class="app-box mx-auto bg-gradient-lush text-white"><i
+                                                    class='bx bx-book-open' data-page="panduan_penggunaan"></i>
+                                            </div>
+                                            <div class="app-title">Panduan</div>
+                                        </div>
+                                        <?php if (in_array($peran, ['admin'])) { ?>
+                                        <div class="col text-center">
+                                            <div class="app-box mx-auto bg-gradient-kyoto text-white"><i
+                                                    class='bx bx-code-alt' data-page="dokumentasi_teknis"></i>
+                                            </div>
+                                            <div class="app-title">Dokumentasi</div>
+                                        </div>
+                                        <?php } ?>
                                     </div>
                                 </div>
                             </li>
@@ -204,6 +218,22 @@
                             <div class="menu-title">Dashboard</div>
                         </a>
                     </li>
+                    <li>
+                        <a href="javascript:;" data-page="panduan_penggunaan">
+                            <div class="parent-icon"><i class='bx bx-book-open'></i>
+                            </div>
+                            <div class="menu-title">Panduan Penggunaan</div>
+                        </a>
+                    </li>
+                    <?php if (in_array($peran, ['admin'])) { ?>
+                    <li>
+                        <a href="javascript:;" data-page="dokumentasi_teknis">
+                            <div class="parent-icon"><i class='bx bx-code-alt'></i>
+                            </div>
+                            <div class="menu-title">Dokumentasi Teknis</div>
+                        </a>
+                    </li>
+                    <?php } ?>
                 </ul>
             </nav>
         </div>

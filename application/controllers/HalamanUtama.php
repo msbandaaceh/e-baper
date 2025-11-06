@@ -25,12 +25,22 @@ class HalamanUtama extends MY_Controller
             'keranjang',
             'validasi',
             'riwayat_permintaan',
-            'permohonan_valid'
+            'permohonan_valid',
+            'panduan_penggunaan',
+            'dokumentasi_teknis'
         ];
 
         if (in_array($halaman, $allowed)) {
             $data['peran'] = $this->session->userdata('peran');
             $data['page'] = $halaman;
+
+            // Cek akses untuk dokumentasi teknis (hanya admin)
+            if ($halaman == 'dokumentasi_teknis') {
+                if (!in_array($data['peran'], ['admin'])) {
+                    show_404();
+                    return;
+                }
+            }
 
             if ($halaman == 'data_barang') {
                 $data['kategori'] = $this->model->get_seleksi_array('ref_kategori')->result();
