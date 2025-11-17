@@ -119,6 +119,14 @@
                                             </div>
                                             <div class="app-title">Panduan</div>
                                         </div>
+                                        <?php if (in_array($peran, ['admin', 'operator'])) { ?>
+                                        <div class="col text-center">
+                                            <div class="app-box mx-auto bg-gradient-ohhappiness text-white"><i
+                                                    class='bx bx-file' data-page="register_permohonan"></i>
+                                            </div>
+                                            <div class="app-title">Register Permohonan</div>
+                                        </div>
+                                        <?php } ?>
                                         <?php if (in_array($peran, ['admin'])) { ?>
                                         <div class="col text-center">
                                             <div class="app-box mx-auto bg-gradient-kyoto text-white"><i

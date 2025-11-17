@@ -1968,3 +1968,237 @@ function loadTabelAmbilBarang() {
         }
     });
 }
+
+function loadTabelRegisterPermohonan() {
+    $.post('show_tabel_register_permohonan', function (response) {
+        try {
+            const json = JSON.parse(response);
+
+            $('#tabelRegisterPermohonan').html('');
+
+            if (!json.data_register || json.data_register.length === 0) {
+                $('#tabelRegisterPermohonan').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Permohonan Barang Persediaan. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelRegisterPermohonanData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>TANGGAL</th>
+                            <th>STATUS</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_register.forEach((row, index) => {
+                let statusBadge = `<span class="badge bg-${row.status_badge}">${row.status_label}</span>`;
+
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_pegawai}</td>
+                        <td>${row.tanggal}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="detailRegisterPermohonan('${row.id}')">
+                                <i class="bx bx-show"></i> Detail
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>TANGGAL</th>
+                            <th>STATUS</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelRegisterPermohonan').append(data);
+
+            $("#tabelRegisterPermohonanData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelRegisterPermohonan').html('<div class="alert alert-danger">Gagal memuat data register permohonan.</div>');
+        }
+    });
+}
+
+function detailRegisterPermohonan(id) {
+    $.post('show_detail_register_permohonan', { id: id }, function (response) {
+        try {
+            const json = JSON.parse(response);
+
+            if (!json.success) {
+                notifikasi(json.message || 'Gagal memuat detail permohonan', 3);
+                return;
+            }
+
+            $('#tabelDetailRegisterBarang').html('');
+            $('#infoRegisterPermohonan').html('');
+            $('#riwayatRegisterApproval').html('');
+
+            // Info permohonan
+            let statusBadge = '';
+            switch (json.status) {
+                case '0':
+                    statusBadge = '<span class="badge bg-warning">Menunggu Validasi</span>';
+                    break;
+                case '1':
+                    statusBadge = '<span class="badge bg-info">Disetujui Kasub</span>';
+                    break;
+                case '2':
+                    statusBadge = '<span class="badge bg-primary">Disetujui Sekretaris</span>';
+                    break;
+                case '3':
+                    statusBadge = '<span class="badge bg-success">Selesai</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="badge bg-secondary">Tidak Diketahui</span>';
+            }
+
+            let infoData = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Nama Pegawai</dt>
+                            <dd class="col-sm-8">${json.nama_pegawai}</dd>
+                            <dt class="col-sm-4">Tanggal Permohonan</dt>
+                            <dd class="col-sm-8">${json.tanggal_permohonan}</dd>
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">${statusBadge}</dd>
+                        </dl>
+                    </div>
+                </div>
+            `;
+
+            // Detail barang
+            let dataBarang = `
+                <h6 class="mb-3">Detail Barang</h6>
+                <div class="table-responsive">
+                <table id="tabelDetailRegisterBarangData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH DIMINTA</th>
+                            <th>JUMLAH DIBERIKAN</th>
+                            <th>STATUS</th>
+                            <th>KETERANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_barang.forEach((row, index) => {
+                let statusBadge = '';
+                if (row.status == '0') {
+                    statusBadge = '<span class="badge bg-warning">Menunggu</span>';
+                } else if (row.status == '1') {
+                    statusBadge = '<span class="badge bg-success">Disetujui</span>';
+                } else if (row.status == '2') {
+                    statusBadge = '<span class="badge bg-danger">Ditolak</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-secondary">Tidak Diketahui</span>';
+                }
+
+                dataBarang += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_barang}</td>
+                        <td>${row.jumlah_permohonan}</td>
+                        <td>${row.jumlah_diberikan}</td>
+                        <td>${statusBadge}</td>
+                        <td>${row.keterangan}</td>
+                    </tr>
+                `;
+            });
+
+            dataBarang += `
+                    </tbody>
+                </table>
+                </div>
+            `;
+
+            // Riwayat approval
+            let dataRiwayat = `
+                <h6 class="mb-3">Riwayat Approval</h6>
+            `;
+
+            if (json.data_riwayat && json.data_riwayat.length > 0) {
+                dataRiwayat += `
+                    <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>NO</th>
+                                <th>LEVEL</th>
+                                <th>DIPROSES OLEH</th>
+                                <th>TANGGAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                json.data_riwayat.forEach((row, index) => {
+                    dataRiwayat += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${row.level}</td>
+                            <td>${row.created_by}</td>
+                            <td>${row.tanggal}</td>
+                        </tr>
+                    `;
+                });
+                
+                dataRiwayat += `
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            } else {
+                dataRiwayat += `
+                    <div class="alert alert-info">
+                        <i class="bx bx-info-circle"></i> Belum ada riwayat approval
+                    </div>
+                `;
+            }
+
+            $('#infoRegisterPermohonan').append(infoData);
+            $('#tabelDetailRegisterBarang').append(dataBarang);
+            $('#riwayatRegisterApproval').append(dataRiwayat);
+
+            $("#tabelDetailRegisterBarangData").DataTable();
+
+            $('#detail-register').modal('show');
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            notifikasi('Gagal memuat detail permohonan', 3);
+        }
+    });
+}

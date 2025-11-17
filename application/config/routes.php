@@ -42,6 +42,9 @@ $route['simpan_konfirmasi'] = 'HalamanValidasi/simpan_konfirmasi';
 $route['show_tabel_riwayat_permohonan'] = 'HalamanUtama/show_tabel_riwayat_permohonan';
 $route['show_detail_riwayat_permohonan'] = 'HalamanUtama/show_detail_riwayat_permohonan';
 
+$route['show_tabel_register_permohonan'] = 'HalamanUtama/show_tabel_register_permohonan';
+$route['show_detail_register_permohonan'] = 'HalamanUtama/show_detail_register_permohonan';
+
 # ROUTE PROSES PERAN
 $route['show_role'] = 'HalamanUtama/show_role';
 $route['simpan_peran'] = 'HalamanUtama/simpan_peran';

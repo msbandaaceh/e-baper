@@ -26,6 +26,7 @@ class HalamanUtama extends MY_Controller
             'validasi',
             'riwayat_permintaan',
             'permohonan_valid',
+            'register_permohonan',
             'panduan_penggunaan',
             'dokumentasi_teknis'
         ];
@@ -37,6 +38,14 @@ class HalamanUtama extends MY_Controller
             // Cek akses untuk dokumentasi teknis (hanya admin)
             if ($halaman == 'dokumentasi_teknis') {
                 if (!in_array($data['peran'], ['admin'])) {
+                    show_404();
+                    return;
+                }
+            }
+
+            // Cek akses untuk register permohonan (hanya admin dan operator)
+            if ($halaman == 'register_permohonan') {
+                if (!in_array($data['peran'], ['admin', 'operator'])) {
                     show_404();
                     return;
                 }
@@ -312,5 +321,171 @@ class HalamanUtama extends MY_Controller
         }
 
         echo json_encode(['data_barang' => $dataBarang, 'tanggal_permohonan' => $tgl, 'data_riwayat' => $dataRiwayat]);
+    }
+
+    /**
+     * Menampilkan tabel semua permohonan (untuk admin dan operator)
+     */
+    public function show_tabel_register_permohonan()
+    {
+        $query = $this->model->get_all_permohonan();
+
+        if ($query === 0 || $query->num_rows() === 0) {
+            echo json_encode(['data_register' => []]);
+            return;
+        }
+
+        $data = [];
+        foreach ($query->result() as $row) {
+            // Ambil data pegawai dari SSO
+            $params = [
+                'tabel' => 'v_pegawai',
+                'kolom_seleksi' => 'id',
+                'seleksi' => $row->pegawai_id
+            ];
+
+            $result = $this->apihelper->get('apiclient/get_data_seleksi', $params);
+            $nama_pegawai = 'Tidak Diketahui';
+            if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                $nama_pegawai = $result['response']['data'][0]['nama_gelar'] ?? 'Tidak Diketahui';
+            }
+
+            // Format tanggal
+            $date = new DateTime($row->created_on);
+            $tgl = $this->tanggalhelper->convertDayDate($date->format('Y-m-d'));
+
+            // Status label
+            $status_label = '';
+            $status_badge = '';
+            switch ($row->status) {
+                case '0':
+                    $status_label = 'Menunggu Validasi';
+                    $status_badge = 'warning';
+                    break;
+                case '1':
+                    $status_label = 'Disetujui Kasub';
+                    $status_badge = 'info';
+                    break;
+                case '2':
+                    $status_label = 'Disetujui Sekretaris';
+                    $status_badge = 'primary';
+                    break;
+                case '3':
+                    $status_label = 'Selesai';
+                    $status_badge = 'success';
+                    break;
+                default:
+                    $status_label = 'Tidak Diketahui';
+                    $status_badge = 'secondary';
+            }
+
+            $data[] = [
+                'id' => base64_encode($this->encryption->encrypt($row->id)),
+                'nama_pegawai' => $nama_pegawai,
+                'tanggal' => $tgl,
+                'status' => $row->status,
+                'status_label' => $status_label,
+                'status_badge' => $status_badge
+            ];
+        }
+
+        echo json_encode(['data_register' => $data]);
+    }
+
+    /**
+     * Menampilkan detail permohonan untuk register (untuk admin dan operator)
+     */
+    public function show_detail_register_permohonan()
+    {
+        $permohonan_id = $this->encryption->decrypt(base64_decode($this->input->post('id')));
+
+        // Ambil data permohonan
+        $permohonan = $this->model->get_seleksi_array('register_permohonan', ['id' => $permohonan_id])->row();
+        
+        if (!$permohonan) {
+            echo json_encode(['success' => false, 'message' => 'Data permohonan tidak ditemukan']);
+            return;
+        }
+
+        // Ambil data pegawai
+        $params = [
+            'tabel' => 'v_pegawai',
+            'kolom_seleksi' => 'id',
+            'seleksi' => $permohonan->pegawai_id
+        ];
+
+        $result = $this->apihelper->get('apiclient/get_data_seleksi', $params);
+        $nama_pegawai = 'Tidak Diketahui';
+        if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+            $nama_pegawai = $result['response']['data'][0]['nama_gelar'] ?? 'Tidak Diketahui';
+        }
+
+        // Format tanggal
+        $date = new DateTime($permohonan->created_on);
+        $tgl = $this->tanggalhelper->convertDayDate($date->format('Y-m-d'));
+
+        // Ambil detail barang
+        $queryBarang = $this->model->get_seleksi_array('v_detail_permohonan', ['permohonan_id' => $permohonan_id])->result();
+        $dataBarang = [];
+        foreach ($queryBarang as $row) {
+            $status_label = '';
+            switch ($row->status_permohonan) {
+                case '0':
+                    $status_label = 'Menunggu';
+                    break;
+                case '1':
+                    $status_label = 'Disetujui';
+                    break;
+                case '2':
+                    $status_label = 'Ditolak';
+                    break;
+                default:
+                    $status_label = 'Tidak Diketahui';
+            }
+
+            $dataBarang[] = [
+                'nama_barang' => $row->nama_barang,
+                'jumlah_permohonan' => $row->jumlah_permohonan,
+                'jumlah_diberikan' => $row->jumlah_diberikan ?? '-',
+                'status' => $row->status_permohonan,
+                'status_label' => $status_label,
+                'keterangan' => $row->keterangan ?? '-'
+            ];
+        }
+
+        // Ambil riwayat approval
+        $queryRiwayat = $this->model->get_seleksi_array('register_approval', ['permohonan_id' => $permohonan_id], ['created_on' => 'ASC'])->result();
+        $dataRiwayat = [];
+        foreach ($queryRiwayat as $row) {
+            $date = new DateTime($row->created_on);
+            switch ($row->level) {
+                case 'Kasub':
+                    $level = 'Kepala Sub Umum Keuangan';
+                    break;
+                case 'Sekretaris':
+                    $level = 'Sekretaris';
+                    break;
+                case 'operator':
+                    $level = 'Operator Persediaan';
+                    break;
+                default:
+                    $level = $row->level;
+            }
+
+            $dataRiwayat[] = [
+                'created_by' => $row->created_by,
+                'tanggal' => $this->tanggalhelper->convertDayDate($date->format('Y-m-d')),
+                'level' => $level
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'nama_pegawai' => $nama_pegawai,
+            'tanggal_permohonan' => $tgl,
+            'status' => $permohonan->status,
+            'data_barang' => $dataBarang,
+            'data_riwayat' => $dataRiwayat
+        ]);
     }
 }

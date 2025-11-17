@@ -620,4 +620,19 @@ class Model extends CI_Model
         }
 
     }
+
+    /**
+     * Get semua permohonan barang (untuk admin dan operator)
+     * @return object Query result
+     */
+    public function get_all_permohonan()
+    {
+        try {
+            $this->db->where('hapus', '0');
+            $this->db->order_by('created_on', 'DESC');
+            return $this->db->get('register_permohonan');
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
 }
