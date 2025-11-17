@@ -2202,3 +2202,130 @@ function detailRegisterPermohonan(id) {
         }
     });
 }
+
+function loadTabelRegisterAmbilBarang() {
+    $.post('show_tabel_register_ambil_barang', function (response) {
+        try {
+            const json = JSON.parse(response);
+
+            $('#tabelRegisterAmbilBarang').html('');
+
+            if (!json.data_register || json.data_register.length === 0) {
+                $('#tabelRegisterAmbilBarang').html(`
+                    <div class="alert border-0 border-start border-5 border-info alert-dismissible fade show py-2">
+                        <div class="d-flex align-items-center">
+                            <div class="font-35 text-info"><i class='bx bx-info-square'></i></div>
+                            <div class="ms-3">
+                                <h6 class="mb-0 text-info">Informasi</h6>
+                                <div>Belum Ada Data Pengambilan Barang dari Lemari Persediaan. Terima kasih.</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            let data = `
+                <div class="table-responsive">
+                <table id="tabelRegisterAmbilBarangData" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH</th>
+                            <th>TANGGAL</th>
+                            <th>WAKTU</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            json.data_register.forEach((row, index) => {
+                data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.nama_pegawai}</td>
+                        <td>${row.nama_barang}</td>
+                        <td>${row.jumlah}</td>
+                        <td>${row.tanggal}</td>
+                        <td>${row.waktu}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="detailRegisterAmbilBarang('${row.id}')">
+                                <i class="bx bx-show"></i> Detail
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            data += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>NO</th>
+                            <th>NAMA PEGAWAI</th>
+                            <th>NAMA BARANG</th>
+                            <th>JUMLAH</th>
+                            <th>TANGGAL</th>
+                            <th>WAKTU</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            `;
+
+            $('#tabelRegisterAmbilBarang').append(data);
+
+            $("#tabelRegisterAmbilBarangData").DataTable();
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            $('#tabelRegisterAmbilBarang').html('<div class="alert alert-danger">Gagal memuat data register ambil barang.</div>');
+        }
+    });
+}
+
+function detailRegisterAmbilBarang(id) {
+    $.post('show_detail_register_ambil_barang', { id: id }, function (response) {
+        try {
+            const json = JSON.parse(response);
+
+            if (!json.success) {
+                notifikasi(json.message || 'Gagal memuat detail ambil barang', 3);
+                return;
+            }
+
+            $('#infoRegisterAmbilBarang').html('');
+
+            let infoData = `
+                <div class="row">
+                    <div class="col-md-12">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Nama Pegawai</dt>
+                            <dd class="col-sm-8">${json.nama_pegawai}</dd>
+                            <dt class="col-sm-4">Nama Barang</dt>
+                            <dd class="col-sm-8">${json.nama_barang}</dd>
+                            <dt class="col-sm-4">Jumlah</dt>
+                            <dd class="col-sm-8">${json.jumlah} ${json.satuan}</dd>
+                            <dt class="col-sm-4">Tanggal</dt>
+                            <dd class="col-sm-8">${json.tanggal}</dd>
+                            <dt class="col-sm-4">Waktu</dt>
+                            <dd class="col-sm-8">${json.waktu}</dd>
+                            <dt class="col-sm-4">Dibuat Oleh</dt>
+                            <dd class="col-sm-8">${json.created_by}</dd>
+                        </dl>
+                    </div>
+                </div>
+            `;
+
+            $('#infoRegisterAmbilBarang').append(infoData);
+
+            $('#detail-register-ambil').modal('show');
+        } catch (e) {
+            console.error("Gagal parsing JSON:", e);
+            notifikasi('Gagal memuat detail ambil barang', 3);
+        }
+    });
+}

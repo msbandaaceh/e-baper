@@ -45,6 +45,9 @@ $route['show_detail_riwayat_permohonan'] = 'HalamanUtama/show_detail_riwayat_per
 $route['show_tabel_register_permohonan'] = 'HalamanUtama/show_tabel_register_permohonan';
 $route['show_detail_register_permohonan'] = 'HalamanUtama/show_detail_register_permohonan';
 
+$route['show_tabel_register_ambil_barang'] = 'HalamanUtama/show_tabel_register_ambil_barang';
+$route['show_detail_register_ambil_barang'] = 'HalamanUtama/show_detail_register_ambil_barang';
+
 # ROUTE PROSES PERAN
 $route['show_role'] = 'HalamanUtama/show_role';
 $route['simpan_peran'] = 'HalamanUtama/simpan_peran';

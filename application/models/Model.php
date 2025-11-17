@@ -635,4 +635,18 @@ class Model extends CI_Model
             return 0;
         }
     }
+
+    /**
+     * Get semua data ambil barang (untuk admin dan operator)
+     * @return object Query result
+     */
+    public function get_all_ambil_barang()
+    {
+        try {
+            $this->db->order_by('created_on', 'DESC');
+            return $this->db->get('register_ambil_barang');
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
 }

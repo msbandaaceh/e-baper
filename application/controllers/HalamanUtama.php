@@ -27,6 +27,7 @@ class HalamanUtama extends MY_Controller
             'riwayat_permintaan',
             'permohonan_valid',
             'register_permohonan',
+            'register_ambil_barang',
             'panduan_penggunaan',
             'dokumentasi_teknis'
         ];
@@ -45,6 +46,14 @@ class HalamanUtama extends MY_Controller
 
             // Cek akses untuk register permohonan (hanya admin dan operator)
             if ($halaman == 'register_permohonan') {
+                if (!in_array($data['peran'], ['admin', 'operator'])) {
+                    show_404();
+                    return;
+                }
+            }
+
+            // Cek akses untuk register ambil barang (hanya admin dan operator)
+            if ($halaman == 'register_ambil_barang') {
                 if (!in_array($data['peran'], ['admin', 'operator'])) {
                     show_404();
                     return;
@@ -486,6 +495,116 @@ class HalamanUtama extends MY_Controller
             'status' => $permohonan->status,
             'data_barang' => $dataBarang,
             'data_riwayat' => $dataRiwayat
+        ]);
+    }
+
+    /**
+     * Menampilkan tabel semua ambil barang (untuk admin dan operator)
+     */
+    public function show_tabel_register_ambil_barang()
+    {
+        $query = $this->model->get_all_ambil_barang();
+
+        if ($query === 0 || $query->num_rows() === 0) {
+            echo json_encode(['data_register' => []]);
+            return;
+        }
+
+        $data = [];
+        foreach ($query->result() as $row) {
+            // Ambil data pegawai dari SSO
+            $params = [
+                'tabel' => 'v_pegawai',
+                'kolom_seleksi' => 'id',
+                'seleksi' => $row->pegawai_id
+            ];
+
+            $result = $this->apihelper->get('apiclient/get_data_seleksi', $params);
+            $nama_pegawai = 'Tidak Diketahui';
+            if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+                $nama_pegawai = $result['response']['data'][0]['nama_gelar'] ?? 'Tidak Diketahui';
+            }
+
+            // Ambil data barang
+            $barang = $this->model->get_seleksi_array('register_barang', ['id' => $row->barang_id]);
+            $nama_barang = 'Tidak Diketahui';
+            if ($barang->num_rows() > 0) {
+                $nama_barang = $barang->row()->nama_barang ?? 'Tidak Diketahui';
+            }
+
+            // Format tanggal
+            $date = new DateTime($row->created_on);
+            $tgl = $this->tanggalhelper->convertDayDate($date->format('Y-m-d'));
+            $waktu = date('H:i:s', strtotime($row->created_on));
+
+            $data[] = [
+                'id' => base64_encode($this->encryption->encrypt($row->id)),
+                'nama_pegawai' => $nama_pegawai,
+                'nama_barang' => $nama_barang,
+                'jumlah' => $row->jumlah,
+                'tanggal' => $tgl,
+                'waktu' => $waktu
+            ];
+        }
+
+        echo json_encode(['data_register' => $data]);
+    }
+
+    /**
+     * Menampilkan detail ambil barang untuk register (untuk admin dan operator)
+     */
+    public function show_detail_register_ambil_barang()
+    {
+        $id = $this->encryption->decrypt(base64_decode($this->input->post('id')));
+
+        // Ambil data ambil barang
+        $ambil_barang = $this->model->get_seleksi_array('register_ambil_barang', ['id' => $id])->row();
+        
+        if (!$ambil_barang) {
+            echo json_encode(['success' => false, 'message' => 'Data ambil barang tidak ditemukan']);
+            return;
+        }
+
+        // Ambil data pegawai
+        $params = [
+            'tabel' => 'v_pegawai',
+            'kolom_seleksi' => 'id',
+            'seleksi' => $ambil_barang->pegawai_id
+        ];
+
+        $result = $this->apihelper->get('apiclient/get_data_seleksi', $params);
+        $nama_pegawai = 'Tidak Diketahui';
+        if ($result['status_code'] === 200 && $result['response']['status'] === 'success') {
+            $nama_pegawai = $result['response']['data'][0]['nama_gelar'] ?? 'Tidak Diketahui';
+        }
+
+        // Ambil data barang
+        $barang = $this->model->get_seleksi_array('register_barang', ['id' => $ambil_barang->barang_id]);
+        $nama_barang = 'Tidak Diketahui';
+        $satuan = '-';
+        if ($barang->num_rows() > 0) {
+            $nama_barang = $barang->row()->nama_barang ?? 'Tidak Diketahui';
+            // Ambil satuan
+            $satuan_data = $this->model->get_seleksi_array('ref_satuan', ['id' => $barang->row()->satuan_id]);
+            if ($satuan_data->num_rows() > 0) {
+                $satuan = $satuan_data->row()->nama_satuan ?? '-';
+            }
+        }
+
+        // Format tanggal
+        $date = new DateTime($ambil_barang->created_on);
+        $tgl = $this->tanggalhelper->convertDayDate($date->format('Y-m-d'));
+        $waktu = date('H:i:s', strtotime($ambil_barang->created_on));
+
+        echo json_encode([
+            'success' => true,
+            'nama_pegawai' => $nama_pegawai,
+            'nama_barang' => $nama_barang,
+            'jumlah' => $ambil_barang->jumlah,
+            'satuan' => $satuan,
+            'tanggal' => $tgl,
+            'waktu' => $waktu,
+            'created_by' => $ambil_barang->created_by ?? '-'
         ]);
     }
 }

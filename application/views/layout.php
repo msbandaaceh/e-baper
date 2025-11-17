@@ -126,6 +126,12 @@
                                             </div>
                                             <div class="app-title">Register Permohonan</div>
                                         </div>
+                                        <div class="col text-center">
+                                            <div class="app-box mx-auto bg-gradient-blues text-white"><i
+                                                    class='bx bx-cabinet' data-page="register_ambil_barang"></i>
+                                            </div>
+                                            <div class="app-title">Register Ambil Barang</div>
+                                        </div>
                                         <?php } ?>
                                         <?php if (in_array($peran, ['admin'])) { ?>
                                         <div class="col text-center">
