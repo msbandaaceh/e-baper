@@ -120,26 +120,26 @@
                                             <div class="app-title">Panduan</div>
                                         </div>
                                         <?php if (in_array($peran, ['admin', 'operator'])) { ?>
-                                        <div class="col text-center">
-                                            <div class="app-box mx-auto bg-gradient-ohhappiness text-white"><i
-                                                    class='bx bx-file' data-page="register_permohonan"></i>
+                                            <div class="col text-center">
+                                                <div class="app-box mx-auto bg-gradient-ohhappiness text-white"><i
+                                                        class='bx bx-file' data-page="register_permohonan"></i>
+                                                </div>
+                                                <div class="app-title">Register Permohonan</div>
                                             </div>
-                                            <div class="app-title">Register Permohonan</div>
-                                        </div>
-                                        <div class="col text-center">
-                                            <div class="app-box mx-auto bg-gradient-blues text-white"><i
-                                                    class='bx bx-cabinet' data-page="register_ambil_barang"></i>
+                                            <div class="col text-center">
+                                                <div class="app-box mx-auto bg-gradient-blues text-white"><i
+                                                        class='bx bx-cabinet' data-page="register_ambil_barang"></i>
+                                                </div>
+                                                <div class="app-title">Register Ambil Barang</div>
                                             </div>
-                                            <div class="app-title">Register Ambil Barang</div>
-                                        </div>
                                         <?php } ?>
                                         <?php if (in_array($peran, ['admin'])) { ?>
-                                        <div class="col text-center">
-                                            <div class="app-box mx-auto bg-gradient-kyoto text-white"><i
-                                                    class='bx bx-code-alt' data-page="dokumentasi_teknis"></i>
+                                            <div class="col text-center">
+                                                <div class="app-box mx-auto bg-gradient-kyoto text-white"><i
+                                                        class='bx bx-code-alt' data-page="dokumentasi_teknis"></i>
+                                                </div>
+                                                <div class="app-title">Dokumentasi</div>
                                             </div>
-                                            <div class="app-title">Dokumentasi</div>
-                                        </div>
                                         <?php } ?>
                                     </div>
                                 </div>
@@ -170,8 +170,8 @@
                             if (in_array($peran, ['admin'])) {
                                 ?>
                                 <li class="nav-item dropdown dropdown-large">
-                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="javascript:;"
-                                        data-page="validasi" role="button">
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative"
+                                        href="javascript:;" data-page="validasi" role="button">
                                         <div id="countValidasi"></div>
                                         <i class='bx bx-task'></i>
                                     </a>
@@ -182,8 +182,8 @@
                             if (in_array($peran, ['operator'])) {
                                 ?>
                                 <li class="nav-item dropdown dropdown-large">
-                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="javascript:;"
-                                        data-page="permohonan_valid" role="button">
+                                    <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative"
+                                        href="javascript:;" data-page="permohonan_valid" role="button">
                                         <div id="countValid"></div>
                                         <i class='bx bx-task'></i>
                                     </a>
@@ -201,6 +201,9 @@
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="<?= $this->config->item('sso_server') ?>"><i
+                                        class='bx bx-transfer-alt'></i><span>Pindah Layanan</span></a>
+                            </li>
                             <li><a class="dropdown-item" href="keluar"><i
                                         class='bx bx-log-out-circle'></i><span>Keluar</span></a>
                             </li>
@@ -240,13 +243,13 @@
                         </a>
                     </li>
                     <?php if (in_array($peran, ['admin'])) { ?>
-                    <li>
-                        <a href="javascript:;" data-page="dokumentasi_teknis">
-                            <div class="parent-icon"><i class='bx bx-code-alt'></i>
-                            </div>
-                            <div class="menu-title">Dokumentasi Teknis</div>
-                        </a>
-                    </li>
+                        <li>
+                            <a href="javascript:;" data-page="dokumentasi_teknis">
+                                <div class="parent-icon"><i class='bx bx-code-alt'></i>
+                                </div>
+                                <div class="menu-title">Dokumentasi Teknis</div>
+                            </a>
+                        </li>
                     <?php } ?>
                 </ul>
             </nav>
